@@ -1,0 +1,9 @@
+[submodule "hardklor"]
+	path = hardklor
+	url = https://github.com/mhoopmann/hardklor
+[submodule "mstoolkit"]
+	path = mstoolkit
+	url = https://github.com/mhoopmann/mstoolkit.git
+[submodule "protobuf"]
+	path = protobuf
+	url = https://github.com/google/protobuf.git
