@@ -31,7 +31,7 @@ mango_Search::~mango_Search()
 {
 }
 
-void insert_pep_pq(char *pepArray[], float xcorrArray[], char *ins_pep, float ins_xcorr)
+void insert_pep_pq(char *pepArray[], char *proArray[], float xcorrArray[], char *ins_pep, char *ins_pro, float ins_xcorr)
 {
    int i; 
 
@@ -49,6 +49,7 @@ void insert_pep_pq(char *pepArray[], float xcorrArray[], char *ins_pep, float in
    if (xcorrArray[NUMPEPTIDES - 1] < ins_xcorr) {
       xcorrArray[NUMPEPTIDES - 1] = ins_xcorr;
       pepArray[NUMPEPTIDES - 1] = ins_pep;
+      proArray[NUMPEPTIDES - 1] = ins_pro;
    } else return;
 
    // shiffle
@@ -57,10 +58,13 @@ void insert_pep_pq(char *pepArray[], float xcorrArray[], char *ins_pep, float in
          // Swap
          float temp = xcorrArray[i];
          char *temp_pep = pepArray[i];
+         char *temp_pro = proArray[i];
          xcorrArray[i] = xcorrArray[i-1];
          pepArray[i] = pepArray[i-1];
+         proArray[i] = proArray[i-1];
          xcorrArray[i-1] = temp;
          pepArray[i-1] = temp_pep;
+         proArray[i-1] = temp_pro;
       } else break;
    }
 }
@@ -394,6 +398,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 #define LYSINE_MOD 197.032422
 
    char *toppep1[NUMPEPTIDES], *toppep2[NUMPEPTIDES], *toppepcombined[NUMPEPTIDES];
+   char *toppro1[NUMPEPTIDES], *toppro2[NUMPEPTIDES], *topprocombined[NUMPEPTIDES];
    float xcorrPep1[NUMPEPTIDES], xcorrPep2[NUMPEPTIDES], xcorrCombined[NUMPEPTIDES];
 
    strcpy(szOutputTxt, szMZXML);
@@ -534,12 +539,15 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          }
          dTolerance = (dPPM * pep_mass1) / 1e6;
          //vector<string*> *peptides = phdp->phd_get_peptides_ofmass(pep_mass1);
-         vector<string*> *peptides1 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass1, 1.0);
+         vector<peptide_hash_database::phd_peptide> *peptides1 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass1, 1.0);
 
-         for (string *peptide : *peptides1)
+         for (peptide_hash_database::phd_peptide peptide : *peptides1)
          {
-            char *szPeptide = new char[(*peptide).length() + 1];
-            strcpy(szPeptide, (*peptide).c_str() );
+            char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
+            strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
+
+            char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
+            strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
             // sanity check to ignore peptides w/unknown AA residues
             // should not be needed now that this is addressed in the hash building
@@ -551,10 +559,10 @@ void mango_Search::SearchForPeptides(char *szMZXML,
             vdXcorr_pep1.push_back(dXcorr);
 
             hist_pep1[mango_get_histogram_bin_num(dXcorr)]++;
-            insert_pep_pq(toppep1, xcorrPep1, szPeptide, dXcorr);
+            insert_pep_pq(toppep1, toppro1, xcorrPep1, szPeptide, szProtein, dXcorr);
             num_pep1++;
             if (g_staticParams.options.bVerboseOutput)
-               cout << "pep1: " << *peptide << "  xcorr " << dXcorr << endl;
+               cout << "pep1: " << peptide.phdpep_sequence() << "  xcorr " << dXcorr << endl;
          }
 
          if (g_staticParams.options.bVerboseOutput)
@@ -564,12 +572,15 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          }
          dTolerance = (dPPM * pep_mass2) / 1e6;
          //peptides = phdp->phd_get_peptides_ofmass(pep_mass2);
-         vector<string*> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass2, 1.0);
+         vector<peptide_hash_database::phd_peptide> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass2, 1.0);
 
-         for (string *peptide : *peptides2)
+         for (peptide_hash_database::phd_peptide peptide : *peptides2)
          {
-            char *szPeptide = new char[(*peptide).length() + 1];
-            strcpy(szPeptide, (*peptide).c_str() );
+            char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
+            strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
+
+            char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
+            strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
             // sanity check to ignore peptides w/unknown AA residues
             // should not be needed now that this is addressed in the hash building
@@ -581,10 +592,10 @@ void mango_Search::SearchForPeptides(char *szMZXML,
             vdXcorr_pep2.push_back(dXcorr);
 
             hist_pep2[mango_get_histogram_bin_num(dXcorr)]++;
-            insert_pep_pq(toppep2, xcorrPep2, szPeptide, dXcorr);
+            insert_pep_pq(toppep2, toppro2, xcorrPep2, szPeptide, szProtein, dXcorr);
             num_pep2++;
             if (g_staticParams.options.bVerboseOutput)
-               cout << "pep2: " << *peptide << "  xcorr " << dXcorr << endl;
+               cout << "pep2: " << peptide.phdpep_sequence() << "  xcorr " << dXcorr << endl;
          }
 
          if (toppep1[0] == NULL || toppep2[0] == NULL)
@@ -694,7 +705,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 
                      double dCombinedXcorr = xcorrPep1[x] + xcorrPep2[y];
 
-                     insert_pep_pq(toppepcombined, xcorrCombined, combinedPep, dCombinedXcorr);
+                     insert_pep_pq(toppepcombined, topprocombined, xcorrCombined, combinedPep, NULL, dCombinedXcorr);
                   }
                }
             }

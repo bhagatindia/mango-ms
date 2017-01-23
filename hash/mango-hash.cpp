@@ -66,18 +66,17 @@ float phd_calculate_mass_peptide(const string peptide)
    return mass;
 }
 
-vector<string*>* protein_hash_db_::phd_get_peptides_ofmass(int mass)
+vector<peptide_hash_database::phd_peptide>* protein_hash_db_::phd_get_peptides_ofmass(int mass)
 {
    // another memory leak
-   vector<string*> *ret = new vector<string*>;
+   vector<peptide_hash_database::phd_peptide> *ret = new vector<peptide_hash_database::phd_peptide>;
 
    peptide_hash_database::phd_peptide_mass pepm = phd_file_entry.phdpepm(mass);
    if (pepm.phdpmass_mass() == mass)
    {
       for (int i = 0; i < pepm.phdpmass_peptide_list_size(); i++)
       {
-         string *str = new string(pepm.phdpmass_peptide_list(i).phdpep_sequence());
-         ret->push_back(str);
+         ret->push_back(pepm.phdpmass_peptide_list(i));
       }
    }
    return ret;
@@ -86,10 +85,10 @@ vector<string*>* protein_hash_db_::phd_get_peptides_ofmass(int mass)
 #define PEP_WITHIN_TOLERANCE(mass_given, tolerance, mass_computed) \
   ((mass_computed <= (mass_given + tolerance)) && (mass_computed >= (mass_given - tolerance)))
 
-vector<string*>* protein_hash_db_::phd_get_peptides_ofmass_tolerance(float mass_given, float tolerance)
+vector<peptide_hash_database::phd_peptide>* protein_hash_db_::phd_get_peptides_ofmass_tolerance(float mass_given, float tolerance)
 {
    // another memory leak
-   vector<string*> *ret = new vector<string*>;
+   vector<peptide_hash_database::phd_peptide> *ret = new vector<peptide_hash_database::phd_peptide>;
 
    int mass_min = floor(mass_given - tolerance);
    int mass_max = ceil(mass_given + tolerance);
@@ -101,8 +100,7 @@ vector<string*>* protein_hash_db_::phd_get_peptides_ofmass_tolerance(float mass_
          for (int i = 0; i < pepm.phdpmass_peptide_list_size(); i++) {
             float mass_computed = phd_calculate_mass_peptide(pepm.phdpmass_peptide_list(i).phdpep_sequence());
             if (PEP_WITHIN_TOLERANCE(mass_given, tolerance, mass_computed)) {
-               string *str = new string(pepm.phdpmass_peptide_list(i).phdpep_sequence());
-               ret->push_back(str);
+               ret->push_back(pepm.phdpmass_peptide_list(i));
             }
          }
       }
@@ -399,6 +397,7 @@ void phd_add_peptide_into_hash (range *r, string peptide,
    new_peptide->set_phdpep_sequence(peptide);
    new_peptide->set_phdpep_pepstart(r->start);
    new_peptide->set_phdpep_peplen(r->length);
+   new_peptide->set_phdpep_protein_name(pro_seq.phdpro_name());
 }
 
 void phd_split_protein_sequence_peptides(enzyme_cut_params params, 

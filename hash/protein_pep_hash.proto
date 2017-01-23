@@ -12,6 +12,7 @@ message phd_peptide {
    optional int32             phdpep_peplen = 3;
    optional int32             phdpep_cleavedpep = 4; // This should be an enum; left, right, semi, full
    optional string            phdpep_sequence = 5;
+   optional string            phdpep_protein_name = 6;
 }
 
 message phd_header {

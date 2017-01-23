@@ -13,8 +13,8 @@ struct enzyme_cut_params {
 
 struct protein_hash_db_ {
    peptide_hash_database::phd_file phd_file_entry;
-   vector<string*>* phd_get_peptides_ofmass(int mass);
-   vector<string*>* phd_get_peptides_ofmass_tolerance(float mass_given, float tolerance);
+   vector<peptide_hash_database::phd_peptide>* phd_get_peptides_ofmass(int mass);
+   vector<peptide_hash_database::phd_peptide>* phd_get_peptides_ofmass_tolerance(float mass_given, float tolerance);
    float phd_calculate_mass_peptide(const string peptide);
 };
 
