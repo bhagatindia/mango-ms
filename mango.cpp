@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
    if (argc != 4)
    {
-      printf("\n  USAGE:  mango input.mzXML protein_database.txt peptide_hash_database.txt\n\n");
+      printf("\n  USAGE:  mango <input.mzXML> <protein_database> <protein_database_hash>\n\n");
       printf("  Incorrect command line input (need 3 input arguments).\n\n", argc);
       exit(1);
    }
@@ -123,8 +123,14 @@ int main(int argc, char **argv)
    params.postcut_amino = "KR";
    params.postnocut_amino = "P";
 
+
+   // Get actual path of database file; needed for pep.xml output
+   char szFullPathFasta[PATH_MAX];
+   char *ptr;
+   ptr = realpath(argv[2], szFullPathFasta);
+
    // Now open fasta file and get a list of all peptides with masses close to 
-   mango_Search::SearchForPeptides(szMZXML, argv[2], params, argv[3]);
+   mango_Search::SearchForPeptides(szMZXML, szFullPathFasta, params, argv[3]);
 
    return 0;
 

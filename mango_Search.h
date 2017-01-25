@@ -60,7 +60,8 @@ private:
                                    int iScanNumber);
 
    static void WritePepXMLHeader(FILE *fpxml,
-                                 char *szBaseName);
+                                 char *szBaseName,
+                                 const char *szFastaFile);
 
    static void WriteSpectrumQuery(FILE *fpxml,
                                   char *szBaseName,

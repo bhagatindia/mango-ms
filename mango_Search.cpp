@@ -445,7 +445,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    }
    int iIndex=0;
 
-   WritePepXMLHeader(fpxml, szBaseName);
+   WritePepXMLHeader(fpxml, szBaseName, protein_file);
 
    if (!g_staticParams.options.bVerboseOutput)
    {
@@ -539,30 +539,36 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          }
          dTolerance = (dPPM * pep_mass1) / 1e6;
          //vector<string*> *peptides = phdp->phd_get_peptides_ofmass(pep_mass1);
-         vector<peptide_hash_database::phd_peptide> *peptides1 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass1, 1.0);
 
-         for (peptide_hash_database::phd_peptide peptide : *peptides1)
+         for (int x=0; x<1; x++)
          {
-            char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
-            strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
+            vector<peptide_hash_database::phd_peptide> *peptides1 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass1 - x*1.003355, dTolerance);
 
-            char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
-            strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
+            for (peptide_hash_database::phd_peptide peptide : *peptides1)
+            {
+               char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
+               strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
 
-            // sanity check to ignore peptides w/unknown AA residues
-            // should not be needed now that this is addressed in the hash building
-            if (strchr(szPeptide, 'B') || strchr(szPeptide, 'X') || strchr(szPeptide, 'J') || strchr(szPeptide, 'Z'))
-               dXcorr = 0.0;
-            else
-               dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
+               char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
+               strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
-            vdXcorr_pep1.push_back(dXcorr);
+               // sanity check to ignore peptides w/unknown AA residues
+               // should not be needed now that this is addressed in the hash building
+               if (strchr(szPeptide, 'B') || strchr(szPeptide, 'X') || strchr(szPeptide, 'J') || strchr(szPeptide, 'Z'))
+                  dXcorr = 0.0;
+               else
+                  dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
 
-            hist_pep1[mango_get_histogram_bin_num(dXcorr)]++;
-            insert_pep_pq(toppep1, toppro1, xcorrPep1, szPeptide, szProtein, dXcorr);
-            num_pep1++;
-            if (g_staticParams.options.bVerboseOutput)
-               cout << "pep1: " << peptide.phdpep_sequence() << "  xcorr " << dXcorr << endl;
+               vdXcorr_pep1.push_back(dXcorr);
+
+               hist_pep1[mango_get_histogram_bin_num(dXcorr)]++;
+               insert_pep_pq(toppep1, toppro1, xcorrPep1, szPeptide, szProtein, dXcorr);
+               num_pep1++;
+               if (g_staticParams.options.bVerboseOutput)
+                  cout << "pep1: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
+            }
+
+            delete peptides1;
          }
 
          if (g_staticParams.options.bVerboseOutput)
@@ -571,31 +577,36 @@ void mango_Search::SearchForPeptides(char *szMZXML,
             cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2 << ")" << endl;
          }
          dTolerance = (dPPM * pep_mass2) / 1e6;
-         //peptides = phdp->phd_get_peptides_ofmass(pep_mass2);
-         vector<peptide_hash_database::phd_peptide> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass2, 1.0);
 
-         for (peptide_hash_database::phd_peptide peptide : *peptides2)
+         for (int x=0; x<1; x++)
          {
-            char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
-            strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
+            vector<peptide_hash_database::phd_peptide> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass2 - x*1.003355, dTolerance);
 
-            char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
-            strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
+            for (peptide_hash_database::phd_peptide peptide : *peptides2)
+            {
+               char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
+               strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
 
-            // sanity check to ignore peptides w/unknown AA residues
-            // should not be needed now that this is addressed in the hash building
-            if (strchr(szPeptide, 'B') || strchr(szPeptide, 'X') || strchr(szPeptide, 'J') || strchr(szPeptide, 'Z'))
-               dXcorr = 0.0;
-            else
-               dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
+               char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
+               strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
-            vdXcorr_pep2.push_back(dXcorr);
+               // sanity check to ignore peptides w/unknown AA residues
+               // should not be needed now that this is addressed in the hash building
+               if (strchr(szPeptide, 'B') || strchr(szPeptide, 'X') || strchr(szPeptide, 'J') || strchr(szPeptide, 'Z'))
+                  dXcorr = 0.0;
+               else
+                  dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
 
-            hist_pep2[mango_get_histogram_bin_num(dXcorr)]++;
-            insert_pep_pq(toppep2, toppro2, xcorrPep2, szPeptide, szProtein, dXcorr);
-            num_pep2++;
-            if (g_staticParams.options.bVerboseOutput)
-               cout << "pep2: " << peptide.phdpep_sequence() << "  xcorr " << dXcorr << endl;
+               vdXcorr_pep2.push_back(dXcorr);
+
+               hist_pep2[mango_get_histogram_bin_num(dXcorr)]++;
+               insert_pep_pq(toppep2, toppro2, xcorrPep2, szPeptide, szProtein, dXcorr);
+               num_pep2++;
+               if (g_staticParams.options.bVerboseOutput)
+                  cout << "pep2: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
+            }
+
+            delete peptides2;
          }
 
          if (toppep1[0] == NULL || toppep2[0] == NULL)
@@ -858,17 +869,24 @@ bool mango_Search::WithinTolerance(double dMass1,
 
 
 void mango_Search::WritePepXMLHeader(FILE *fpxml,
-                                      char *szBaseName)
+                                     char *szBaseName,
+                                     const char *szFastaFile)
 {
+   char szCWD[1024];
+   if (getcwd(szCWD, sizeof(szCWD)) == NULL)
+   {
+      perror("getcwd() error");
+      strcpy(szCWD, "/pwd");
+   }
 
    fprintf(fpxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-   fprintf(fpxml, "<msms_pipeline_analysis date= \"2016-11-16T15:59:37\" summary_xml=\"/net/pr/vol1/ProteomicsResource/search/engj/20161216-high-lo-mango/%s.pep.xml\" xmlns=\"http://regis-web.systemsbiology.net/pepXML\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://regis-web.systemsbiology.net/pepXML http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v120.xsd\">\n", szBaseName);
-   fprintf(fpxml, " <msms_run_summary base_name=\"/net/pr/vol1/ProteomicsResource/search/engj/20161216-high-lo-mango/%s\" raw_data_type=\"raw\" raw_data=\".mzXML\">\n", szBaseName);
+   fprintf(fpxml, "<msms_pipeline_analysis date= \"2016-11-16T15:59:37\" summary_xml=\"%s/%s.pep.xml\" xmlns=\"http://regis-web.systemsbiology.net/pepXML\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://regis-web.systemsbiology.net/pepXML http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v120.xsd\">\n", szCWD, szBaseName);
+   fprintf(fpxml, " <msms_run_summary base_name=\"%s/%s\" raw_data_type=\"raw\" raw_data=\".mzXML\">\n", szCWD, szBaseName);
    fprintf(fpxml, "  <sample_enzyme name=\"trypsin\">\n");
    fprintf(fpxml, "   <specificity cut=\"KR\" no_cut=\"P\" sense=\"C\"/>\n");
    fprintf(fpxml, "  </sample_enzyme>\n");
-   fprintf(fpxml, "  <search_summary base_name=\"/net/pr/vol1/ProteomicsResource/search/engj/20161216-high-lo-mango/%s\" search_engine=\"Kojak\" search_engine_version=\"1.0.0\" precursor_mass_type=\"monoisotopic\" fragment_mass_type=\"monoisotopic\" search_id=\"1\">\n", szBaseName);
-   fprintf(fpxml, "   <search_database local_path=\"/net/pr/vol1/ProteomicsResource/search/engj/20161216-high-lo-mango/HUMAN.fasta.20160308\" type=\"AA\"/>\n");
+   fprintf(fpxml, "  <search_summary base_name=\"%s/%s\" search_engine=\"Kojak\" search_engine_version=\"1.0.0\" precursor_mass_type=\"monoisotopic\" fragment_mass_type=\"monoisotopic\" search_id=\"1\">\n", szCWD, szBaseName);
+   fprintf(fpxml, "   <search_database local_path=\"%s\" type=\"AA\"/>\n", szFastaFile);
    fprintf(fpxml, "   <enzymatic_search_contstraint enzyme=\"Trypsin\" max_num_internal_cleavages=\"1\" min_number_termini=\"2\"/>\n");
    fprintf(fpxml, "   <parameter name=\"ion_series_A\" value=\"0\"/>\n");
    fprintf(fpxml, "   <parameter name=\"ion_series_B\" value=\"1\"/>\n");
@@ -901,7 +919,11 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
                                        int iScan) 
 {                         
    int i;
-   double xl = 300.0;
+   double xl = 751.40508;  //FIX
+
+   // add terminal masses OH + H
+   dCalcMass1 += LYSINE_MOD + g_staticParams.massUtility.pdAAMassFragment['o'] + 2*g_staticParams.massUtility.pdAAMassFragment['h'];
+   dCalcMass2 += LYSINE_MOD + g_staticParams.massUtility.pdAAMassFragment['o'] + 2*g_staticParams.massUtility.pdAAMassFragment['h'];
    
    fprintf(fpxml, "  <spectrum_query spectrum=\"%s.%d.%d.%d\" start_scan=\"%d\" end_scan=\"%d\" precursor_neutral_mass=\"%0.6f\" assumed_charge=\"%d\" index=\"%d\">\n",
          szBaseName, iScan, iScan, iCharge, iScan, iScan, dExpMass1+dExpMass2+xl, iCharge, ++iIndex);
