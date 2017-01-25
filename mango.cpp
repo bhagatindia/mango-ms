@@ -494,7 +494,7 @@ void GENERATE_HK(char *szHK)
 
       iResolution = 70000; //iResolutionMS1;
       iMSLevel = 1;
-      iChargeMin = 1; //iChargeMin1;
+      iChargeMin = 4; //iChargeMin1;
       iChargeMax = 8; //iChargeMax1;
    }
    else
@@ -504,7 +504,7 @@ void GENERATE_HK(char *szHK)
       iResolution = 17500; //iResolutionMS2;
       iMSLevel = 2;
       iChargeMin = 1;//iChargeMin2;
-      iChargeMax = 9;//iChargeMax2;
+      iChargeMax = 3;//iChargeMax2;
    }
 
    FILE *fp;
@@ -525,7 +525,7 @@ void GENERATE_HK(char *szHK)
    fprintf(fp, "centroided = 1\n");
    fprintf(fp, "\n");
    fprintf(fp, "# Parameters used in preprocessing spectra prior to analysis\n");
-   fprintf(fp, "ms_level = 1\n");
+   fprintf(fp, "ms_level = %d\n", iMSLevel);
    fprintf(fp, "scan_range_min = 0\n");
    fprintf(fp, "scan_range_max = 0\n");
    fprintf(fp, "signal_to_noise = 0\n");
@@ -545,7 +545,7 @@ void GENERATE_HK(char *szHK)
    fprintf(fp, "\n");
    fprintf(fp, "charge_min = %d\n", iChargeMin);
    fprintf(fp, "charge_max = %d\n", iChargeMax);
-   fprintf(fp, "correlation = 0.90\n");
+   fprintf(fp, "correlation = 0.50\n");
    fprintf(fp, "averagine_mod = 0\n");
    fprintf(fp, "\n");
    fprintf(fp, "mz_window = 5.25\n");
@@ -573,7 +573,9 @@ int WITHIN_TOLERANCE(double dMass1, double dMass2)
 {
    double dPPM = 50.0;
 
-   if (1E6 * fabs(dMass1 - dMass2)/dMass2 <= dPPM)
+   if (1E6 * fabs(dMass1 - dMass2)/dMass2 <= dPPM
+         || 1E6 * fabs(dMass1 + 1.003355 - dMass2)/dMass2 <= dPPM 
+         || 1E6 * fabs(dMass1 + 2*1.003355 - dMass2)/dMass2 <= dPPM)
       return 1;
    else
       return 0;
