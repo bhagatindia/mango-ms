@@ -26,7 +26,7 @@ int main(int argc, char **argv)
    if (argc != 4)
    {
       printf("\n  USAGE:  mango <input.mzXML> <protein_database> <protein_database_hash>\n\n");
-      printf("  Incorrect command line input (need 3 input arguments).\n\n", argc);
+      printf("  Incorrect command line input (need 3 input arguments).\n\n");
       exit(1);
    }
 
@@ -126,8 +126,7 @@ int main(int argc, char **argv)
 
    // Get actual path of database file; needed for pep.xml output
    char szFullPathFasta[PATH_MAX];
-   char *ptr;
-   ptr = realpath(argv[2], szFullPathFasta);
+   realpath(argv[2], szFullPathFasta);
 
    // Now open fasta file and get a list of all peptides with masses close to 
    mango_Search::SearchForPeptides(szMZXML, szFullPathFasta, params, argv[3]);
@@ -247,7 +246,6 @@ void READ_HK1(char *szHK)
 
          if (iListCt < (int)pvSpectrumList.size() && pvSpectrumList.at(iListCt).iPrecursorScanNumber == iScanNumber)
          {
-            int iMaxIntensity = 0;
 
             // Get accurate precursor m/z from deconvoluted MS1 peaks
             lFP = ftell(fp);  // store current
@@ -265,18 +263,44 @@ void READ_HK1(char *szHK)
                if (szBuf[0] == 'P')
                {
                   double dMass;
-                  double dMZ;
+                  double dMS2PrecursorMass;
                   int iCharge;
                   int iIntensity;
 
                   sscanf(szBuf, "P\t%lf\t%d\t%d\t", &dMass, &iCharge, &iIntensity);
 
-                  dMZ = (dMass + (iCharge*PROTON_MASS))/iCharge;
 
-                  if (fabs(dMZ -  pvSpectrumList.at(iListCt).dPrecursorMZ) < 0.5 && iIntensity > iMaxIntensity)
+                  if (pvSpectrumList.at(iListCt).iPrecursorCharge > 0)
                   {
-                     iMaxIntensity = iIntensity;
-                     pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass = dMass;
+                     if (iCharge == pvSpectrumList.at(iListCt).iPrecursorCharge)
+                     {
+                        dMS2PrecursorMass = pvSpectrumList.at(iListCt).dPrecursorMZ * iCharge - iCharge*PROTON_MASS;
+
+                        if (WITHIN_TOLERANCE(dMass, dMS2PrecursorMass))
+                        {
+                           // if current mass diff is less than stored mass diff
+                           if (fabs(dMass - dMS2PrecursorMass) < fabs(pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass - dMS2PrecursorMass))
+                           {
+                              pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass = dMass;
+                           }
+                        }
+                     }
+                  }
+                  else
+                  {
+                     // we only have an MS2 m/z and no charge.  So need to take hardklor mass + charge,
+                     // apply charge to MS2 m/z and go from there
+
+                     dMS2PrecursorMass = pvSpectrumList.at(iListCt).dPrecursorMZ * iCharge - iCharge*PROTON_MASS;
+
+                     if (WITHIN_TOLERANCE(dMass, dMS2PrecursorMass))
+                     {
+                        // if current mass diff is less than stored mass diff
+                        if (fabs(dMass - dMS2PrecursorMass) < fabs(pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass - dMS2PrecursorMass))
+                        {
+                           pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass = dMass;
+                        }
+                     }
                   }
                }
             }
@@ -353,6 +377,14 @@ void READ_HK2(char *szHK)
             } pPeaks[MAX_PEAKS];
 
             lFP = ftell(fp);  // store current
+
+            // fallback to using MS2 m/z and charge when no hardklor match
+            if (pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass == 0 && pvSpectrumList.at(iListCt).iPrecursorCharge > 0)
+            {
+                pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass = (pvSpectrumList.at(iListCt).dPrecursorMZ
+                   * pvSpectrumList.at(iListCt).iPrecursorCharge)
+                   - pvSpectrumList.at(iListCt).iPrecursorCharge*PROTON_MASS;
+            }
 
             // Read in all deconvoluted peaks in this MS/MS scan
             while (fgets(szBuf, SIZE_BUF, fp))
