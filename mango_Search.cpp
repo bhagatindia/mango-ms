@@ -540,7 +540,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          dTolerance = (dPPM * pep_mass1) / 1e6;
          //vector<string*> *peptides = phdp->phd_get_peptides_ofmass(pep_mass1);
 
-         for (int x=0; x<1; x++)
+         for (int x=0; x<2; x++)
          {
             vector<peptide_hash_database::phd_peptide> *peptides1 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass1 - x*1.003355, dTolerance);
 
@@ -578,7 +578,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          }
          dTolerance = (dPPM * pep_mass2) / 1e6;
 
-         for (int x=0; x<1; x++)
+         for (int x=0; x<2; x++)
          {
             vector<peptide_hash_database::phd_peptide> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass2 - x*1.003355, dTolerance);
 
