@@ -566,9 +566,12 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                num_pep1++;
                if (g_staticParams.options.bVerboseOutput)
                   cout << "pep1: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
+
+               delete[] szPeptide;
+               delete[] szProtein;
             }
 
-            delete peptides1;
+            (*peptides1).clear();
          }
 
          if (g_staticParams.options.bVerboseOutput)
@@ -604,9 +607,12 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                num_pep2++;
                if (g_staticParams.options.bVerboseOutput)
                   cout << "pep2: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
+
+               delete[] szPeptide;
+               delete[] szProtein;
             }
 
-            delete peptides2;
+            (*peptides2).clear();
          }
 
          if (toppep1[0] == NULL || toppep2[0] == NULL)
@@ -717,6 +723,8 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                      double dCombinedXcorr = xcorrPep1[x] + xcorrPep2[y];
 
                      insert_pep_pq(toppepcombined, topprocombined, xcorrCombined, combinedPep, NULL, dCombinedXcorr);
+
+                     delete[] combinedPep;
                   }
                }
             }
@@ -761,6 +769,17 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 //             pvSpectrumList.at(i).iPrecursorCharge,
                iCharge,                                     // report largest charge of the two released peptides
                iIndex, pvSpectrumList.at(i).iScanNumber);
+
+         for (int y=0; y<g_pvQuery.size(); y++)
+         {
+            // need to free processed spectrum data here
+            for (int x=0;x<g_pvQuery.at(y)->iFastXcorrData;x++)
+            {
+               if (g_pvQuery.at(y)->ppfSparseFastXcorrData[x] != NULL)
+                  delete[] g_pvQuery.at(y)->ppfSparseFastXcorrData[x];
+            }
+         }
+         g_pvQuery.clear();
       }
 
       if (!g_staticParams.options.bVerboseOutput)
@@ -769,6 +788,8 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          fflush(stdout);
          printf("\b\b\b\b");
       }
+
+
    }
 
    fprintf(fpxml, "  </msms_run_summary>\n");
