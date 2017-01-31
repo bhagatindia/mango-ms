@@ -430,6 +430,9 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    FILE *fpxml;
    char szOutput[1024];
    char szBaseName[1024];
+   char combinedPep[512];
+   char szPeptide[512];
+   char szProtein[512];
 
    strcpy(szBaseName, szMZXML);
    if (!strcmp(szBaseName+strlen(szBaseName)-6, ".mzXML"))
@@ -546,10 +549,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 
             for (peptide_hash_database::phd_peptide peptide : *peptides1)
             {
-               char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
-
-               char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
                strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
@@ -566,9 +566,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                num_pep1++;
                if (g_staticParams.options.bVerboseOutput)
                   cout << "pep1: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
-
-               delete[] szPeptide;
-               delete[] szProtein;
             }
 
             (*peptides1).clear();
@@ -587,10 +584,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 
             for (peptide_hash_database::phd_peptide peptide : *peptides2)
             {
-               char *szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
-
-               char *szProtein = new char[peptide.phdpep_protein_name().length() + 1];
                strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
@@ -607,9 +601,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                num_pep2++;
                if (g_staticParams.options.bVerboseOutput)
                   cout << "pep2: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
-
-               delete[] szPeptide;
-               delete[] szProtein;
             }
 
             (*peptides2).clear();
@@ -654,7 +645,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
             fprintf(fptxt, "\t%s\t%f\t%0.3E\t%f", toppep1[0], xcorrPep1[0], dExpect1, phdp->phd_calculate_mass_peptide(string(toppep1[0])));
          else
             fprintf(fptxt, "\t-\t0\t999\t0");
-
 
          CalculateEValue(hist_pep2, num_pep2, &dSlope, &dIntercept,
                pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2, pvSpectrumList.at(i).iScanNumber);
@@ -717,14 +707,11 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                {
                   if (toppep2[y] != NULL)
                   {
-                     char *combinedPep = new char[512];
                      sprintf(combinedPep, "%s + %s", toppep1[x], toppep2[y]);
 
                      double dCombinedXcorr = xcorrPep1[x] + xcorrPep2[y];
 
                      insert_pep_pq(toppepcombined, topprocombined, xcorrCombined, combinedPep, NULL, dCombinedXcorr);
-
-                     delete[] combinedPep;
                   }
                }
             }
@@ -770,7 +757,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                iCharge,                                     // report largest charge of the two released peptides
                iIndex, pvSpectrumList.at(i).iScanNumber);
 
-         for (int y=0; y<g_pvQuery.size(); y++)
+         for (int y=0; y<(int)g_pvQuery.size(); y++)
          {
             // need to free processed spectrum data here
             for (int x=0;x<g_pvQuery.at(y)->iFastXcorrData;x++)
