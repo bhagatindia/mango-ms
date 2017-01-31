@@ -223,7 +223,7 @@ struct EnzymeInfo
 };
 
 // *IMPORTANT* If you change this enum, please also change the corresponding
-// enum in XlinkxDataWrapper.h in the XlinkxWrapper namespace.
+// enum in MangoDataWrapper.h in the MangoWrapper namespace.
 enum AnalysisType
 {
    AnalysisType_Unknown = 0,
@@ -234,7 +234,7 @@ enum AnalysisType
 };
 
 // *IMPORTANT* If you change this enum, please also change the corresponding
-// enum in XlinkxDataWrapper.h in the XlinkxWrapper namespace.
+// enum in MangoDataWrapper.h in the MangoWrapper namespace.
 enum InputType
 {
    InputType_UNKNOWN = -1,
@@ -308,50 +308,50 @@ struct InputFileInfo
    }
 };
 
-enum XlinkxParamType
+enum MangoParamType
 {
-   XlinkxParamType_Unknown = 0,
-   XlinkxParamType_Int,
-   XlinkxParamType_Double,
-   XlinkxParamType_String,
-   XlinkxParamType_VarMods,
-   XlinkxParamType_DoubleRange,
-   XlinkxParamType_IntRange,
-   XlinkxParamType_EnzymeInfo,
-   XlinkxParamType_DoubleVector
+   MangoParamType_Unknown = 0,
+   MangoParamType_Int,
+   MangoParamType_Double,
+   MangoParamType_String,
+   MangoParamType_VarMods,
+   MangoParamType_DoubleRange,
+   MangoParamType_IntRange,
+   MangoParamType_EnzymeInfo,
+   MangoParamType_DoubleVector
 };
 
 
-// A virtual class that provides a generic data structure to store any Xlinkx
+// A virtual class that provides a generic data structure to store any Mango
 // parameter so that we can store all parameters in one data container
-// (e.g. std::map). The specific type of parameter will use the TypedXlinkxParam
+// (e.g. std::map). The specific type of parameter will use the TypedMangoParam
 // class which inherits from this class and specifies _paramType and
 // _strValue, a string representation of the value of the param
 
-class XlinkxParam
+class MangoParam
 {
 public:
-   XlinkxParam(XlinkxParamType paramType, const string& strValue)
+   MangoParam(MangoParamType paramType, const string& strValue)
       : _paramType(paramType), _strValue(strValue) {}
-   virtual ~XlinkxParam() {}
+   virtual ~MangoParam() {}
    string& GetStringValue() { return _strValue; }
 private:
-   XlinkxParamType _paramType;
+   MangoParamType _paramType;
    string _strValue;
 };
 
 
-// A templated class to store Xlinkx parameters of any type, specifying the type
-// T upon creation. It inherits from XlinkxParam so after creation, an object of
-// this class type can be stored as a XlinkxParam and cast back to
-// TypedXlinkxParam to access the GetValue() method when needed.
+// A templated class to store Mango parameters of any type, specifying the type
+// T upon creation. It inherits from MangoParam so after creation, an object of
+// this class type can be stored as a MangoParam and cast back to
+// TypedMangoParam to access the GetValue() method when needed.
 
 template< typename T >
-class TypedXlinkxParam : public XlinkxParam
+class TypedMangoParam : public MangoParam
 {
 public:
-   TypedXlinkxParam (XlinkxParamType paramType, const string& strValue, const T& value)
-      : XlinkxParam(paramType, strValue), _value(value) {}
+   TypedMangoParam (MangoParamType paramType, const string& strValue, const T& value)
+      : MangoParam(paramType, strValue), _value(value) {}
 
    T& GetValue() { return _value; }
 

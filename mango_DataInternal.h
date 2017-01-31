@@ -19,7 +19,7 @@
 
 #include "mango_Data.h"
 
-class XlinkxSearchManager;
+class MangoSearchManager;
 
 #define PROTON_MASS                 1.00727646688
 #define C13_DIFF                    1.00335483
@@ -610,13 +610,7 @@ struct Query
 
    // Sparse matrix representation of data
    int iFastXcorrData;  //MH: I believe these are all the same size now.
-   int iFastXcorrDataNL;
    float **ppfSparseFastXcorrData;
-   float **ppfSparseFastXcorrDataNL;
-
-   // Standard array representation of data
-   float *pfFastXcorrData;
-   float *pfFastXcorrDataNL;  // pfFastXcorrData with NH3, H2O contributions
 
    PepMassInfo          _pepMassInfo;
    SpectrumInfoInternal _spectrumInfoInternal;
@@ -651,10 +645,6 @@ struct Query
       _uliNumMatchedDecoyPeptides = 0;
 
       ppfSparseFastXcorrData = NULL;
-      ppfSparseFastXcorrDataNL = NULL;          // pfFastXcorrData with NH3, H2O contributions
-
-      pfFastXcorrData = NULL;
-      pfFastXcorrDataNL = NULL;              // pfFastXcorrData with NH3, H2O contributions
 
       _pepMassInfo.dCalcPepMass = 0.0;
       _pepMassInfo.dExpPepMass = 0.0;
@@ -683,20 +673,6 @@ struct Query
       }
       delete[] ppfSparseFastXcorrData;
       ppfSparseFastXcorrData = NULL;
-
-      if (g_staticParams.ionInformation.bUseNeutralLoss
-            && (g_staticParams.ionInformation.iIonVal[ION_SERIES_A]
-               || g_staticParams.ionInformation.iIonVal[ION_SERIES_B]
-               || g_staticParams.ionInformation.iIonVal[ION_SERIES_Y]))
-      {
-         for (i=0;i<iFastXcorrDataNL;i++)
-         {
-            if (ppfSparseFastXcorrDataNL[i]!=NULL)
-               delete[] ppfSparseFastXcorrDataNL[i];
-         }
-         delete[] ppfSparseFastXcorrDataNL;
-         ppfSparseFastXcorrDataNL = NULL;
-      }
 
       delete[] _pResults;
       _pResults = NULL;

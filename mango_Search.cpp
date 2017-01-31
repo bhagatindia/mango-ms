@@ -472,11 +472,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
       if (x>0)
          iNonEmptyScan++;
    }
-
-   printf("totalscans %d, nonempty %d\n", (int)pvSpectrumList.size(), iNonEmptyScan);
-   for (int x=0; x<10; x++)
-      printf("%d.  %d\n", x, iHistoSize[x]);
-   exit(1);
 */
 
    for (i=0; i<(int)pvSpectrumList.size(); i++)
@@ -766,6 +761,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                   delete[] g_pvQuery.at(y)->ppfSparseFastXcorrData[x];
             }
          }
+
          g_pvQuery.clear();
       }
 
@@ -775,13 +771,12 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          fflush(stdout);
          printf("\b\b\b\b");
       }
-
-
    }
+
+   mango_preprocess::DeallocateMemory(1);
 
    fprintf(fpxml, "  </msms_run_summary>\n");
    fprintf(fpxml, "</msms_pipeline_analysis>\n");
-
 
    if (!g_staticParams.options.bVerboseOutput)
      printf("\n\nDone.\n");

@@ -81,6 +81,8 @@ void mango_preprocess::LoadAndPreprocessSpectra(MSReader &mstReader,
                iNumClearedPeaks++;
             }
 
+            // clear out contaminant peaks at 752, 
+
             i++;
          }
       }
@@ -164,35 +166,7 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
       return false;
    }
 
-   try
-   {
-      pScoring->pfFastXcorrData = new float[pScoring->_spectrumInfoInternal.iArraySize]();
-   }
-   catch (std::bad_alloc& ba)
-   {
-      fprintf(stderr,  " Error - new(pfFastXcorrData[%d]). bad_alloc: %s.\n", pScoring->_spectrumInfoInternal.iArraySize, ba.what());
-      fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
-      fprintf(stderr, "parameters to address mitigate memory use.\n");
-      return false;
-   }
-
-   if (g_staticParams.ionInformation.bUseNeutralLoss
-         && (g_staticParams.ionInformation.iIonVal[ION_SERIES_A]
-            || g_staticParams.ionInformation.iIonVal[ION_SERIES_B]
-            || g_staticParams.ionInformation.iIonVal[ION_SERIES_Y]))
-   {
-      try
-      {
-         pScoring->pfFastXcorrDataNL = new float[pScoring->_spectrumInfoInternal.iArraySize]();
-      }
-      catch (std::bad_alloc& ba)
-      {
-         fprintf(stderr,  " Error - new(pfFastXcorrDataNL[%d]). bad_alloc: %s.\n", pScoring->_spectrumInfoInternal.iArraySize, ba.what());
-         fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
-         fprintf(stderr, "parameters to address mitigate memory use.\n");
-         return false;
-      }
-   }
+   float pfFastXcorrData[pScoring->_spectrumInfoInternal.iArraySize];
 
    // Create data for correlation analysis.
    // pdTmpRawData intensities are normalized to 100; pdTmpCorrelationData is windowed
@@ -216,12 +190,12 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
          pdTmpFastXcorrData[i-g_staticParams.iXcorrProcessingOffset] = (dSum - pdTmpCorrelationData[i-g_staticParams.iXcorrProcessingOffset])* dTmp;
    }
 
-   pScoring->pfFastXcorrData[0] = 0.0;
+   pfFastXcorrData[0] = 0.0;
    for (i=1; i<pScoring->_spectrumInfoInternal.iArraySize; i++)
    {
       double dTmp = pdTmpCorrelationData[i] - pdTmpFastXcorrData[i];
 
-      pScoring->pfFastXcorrData[i] = (float)dTmp;
+      pfFastXcorrData[i] = (float)dTmp;
 
       // Add flanking peaks if used
       if (g_staticParams.ionInformation.iTheoreticalFragmentIons == 0)
@@ -229,88 +203,12 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
          int iTmp;
 
          iTmp = i-1;
-         pScoring->pfFastXcorrData[i] += (float) ((pdTmpCorrelationData[iTmp] - pdTmpFastXcorrData[iTmp])*0.5);
+         pfFastXcorrData[i] += (float) ((pdTmpCorrelationData[iTmp] - pdTmpFastXcorrData[iTmp])*0.5);
 
          iTmp = i+1;
          if (iTmp < pScoring->_spectrumInfoInternal.iArraySize)
-            pScoring->pfFastXcorrData[i] += (float) ((pdTmpCorrelationData[iTmp] - pdTmpFastXcorrData[iTmp])*0.5);
+            pfFastXcorrData[i] += (float) ((pdTmpCorrelationData[iTmp] - pdTmpFastXcorrData[iTmp])*0.5);
       }
-
-      // If A, B or Y ions and their neutral loss selected, roll in -17/-18 contributions to pfFastXcorrDataNL
-      if (g_staticParams.ionInformation.bUseNeutralLoss
-            && (g_staticParams.ionInformation.iIonVal[ION_SERIES_A]
-               || g_staticParams.ionInformation.iIonVal[ION_SERIES_B]
-               || g_staticParams.ionInformation.iIonVal[ION_SERIES_Y]))
-      {
-         int iTmp;
-
-         pScoring->pfFastXcorrDataNL[i] = pScoring->pfFastXcorrData[i];
-
-         iTmp = i-g_staticParams.precalcMasses.iMinus17;
-         if (iTmp>= 0)
-         {
-            pScoring->pfFastXcorrDataNL[i] += (float)((pdTmpCorrelationData[iTmp] - pdTmpFastXcorrData[iTmp]) * 0.2);
-         }
-
-         iTmp = i-g_staticParams.precalcMasses.iMinus18;
-         if (iTmp>= 0)
-         {
-            pScoring->pfFastXcorrDataNL[i] += (float)((pdTmpCorrelationData[iTmp] - pdTmpFastXcorrData[iTmp]) * 0.2);
-         }
-
-      }
-   }
-
-   // Using sparse matrix which means we free pScoring->pfFastXcorrData, ->pfFastXcorrDataNL here
-   // If A, B or Y ions and their neutral loss selected, roll in -17/-18 contributions to pfFastXcorrDataNL.
-   if (g_staticParams.ionInformation.bUseNeutralLoss
-         && (g_staticParams.ionInformation.iIonVal[ION_SERIES_A]
-            || g_staticParams.ionInformation.iIonVal[ION_SERIES_B]
-            || g_staticParams.ionInformation.iIonVal[ION_SERIES_Y]))
-   {
-      pScoring->iFastXcorrDataNL=pScoring->_spectrumInfoInternal.iArraySize/SPARSE_MATRIX_SIZE+1;
-
-      try
-      {
-         pScoring->ppfSparseFastXcorrDataNL = new float*[pScoring->iFastXcorrDataNL]();
-      }
-      catch (std::bad_alloc& ba)
-      {
-         fprintf(stderr,  " Error - new(pScoring->ppfSparseFastXcorrDataNL[%d]). bad_alloc: %s.", pScoring->iFastXcorrDataNL, ba.what());
-         fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
-         fprintf(stderr, "parameters to address mitigate memory use.\n");
-         return false;
-      }
-
-      for (i=1; i<pScoring->_spectrumInfoInternal.iArraySize; i++)
-      {
-         if (pScoring->pfFastXcorrDataNL[i]>FLOAT_ZERO || pScoring->pfFastXcorrDataNL[i]<-FLOAT_ZERO)
-         {
-            x=i/SPARSE_MATRIX_SIZE;
-            if (pScoring->ppfSparseFastXcorrDataNL[x]==NULL)
-            {
-               try
-               {
-                  pScoring->ppfSparseFastXcorrDataNL[x] = new float[SPARSE_MATRIX_SIZE]();
-               }
-               catch (std::bad_alloc& ba)
-               {
-                  fprintf(stderr,  " Error - new(pScoring->ppfSparseFastXcorrDataNL[%d][%d]). bad_alloc: %s.\n", x, SPARSE_MATRIX_SIZE, ba.what());
-                  fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
-                  fprintf(stderr, "parameters to address mitigate memory use.\n");
-                  return false;
-               }
-               for (y=0; y<SPARSE_MATRIX_SIZE; y++)
-                  pScoring->ppfSparseFastXcorrDataNL[x][y]=0;
-            }
-            y=i-(x*SPARSE_MATRIX_SIZE);
-            pScoring->ppfSparseFastXcorrDataNL[x][y] = pScoring->pfFastXcorrDataNL[i];
-         }
-      }
-
-      delete[] pScoring->pfFastXcorrDataNL;
-      pScoring->pfFastXcorrDataNL = NULL;
-
    }
 
    pScoring->iFastXcorrData=pScoring->_spectrumInfoInternal.iArraySize/SPARSE_MATRIX_SIZE+1;
@@ -322,15 +220,15 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
    }
    catch (std::bad_alloc& ba)
    {
-      fprintf(stderr,  " Error - new(pScoring->ppfSparseFastXcorrData[%d]). bad_alloc: %s.\n", pScoring->iFastXcorrData, ba.what());
-      fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
-      fprintf(stderr, "parameters to address mitigate memory use.\n");
+      fprintf(stderr, " Error - new(pScoring->ppfSparseFastXcorrData[%d]). bad_alloc: %s.\n", pScoring->iFastXcorrData, ba.what());
+      fprintf(stderr, " mango ran out of memory. Look into \"spectrum_batch_size\"\n");
+      fprintf(stderr, " parameters to address mitigate memory use.\n");
       return false;
    }
 
    for (i=1; i<pScoring->_spectrumInfoInternal.iArraySize; i++)
    {
-      if (pScoring->pfFastXcorrData[i]>FLOAT_ZERO || pScoring->pfFastXcorrData[i]<-FLOAT_ZERO)
+      if (pfFastXcorrData[i]>FLOAT_ZERO || pfFastXcorrData[i]<-FLOAT_ZERO)
       {
          x=i/SPARSE_MATRIX_SIZE;
          if (pScoring->ppfSparseFastXcorrData[x]==NULL)
@@ -341,21 +239,18 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
             }
             catch (std::bad_alloc& ba)
             {
-               fprintf(stderr,  " Error - new(pScoring->ppfSparseFastXcorrData[%d][%d]). bad_alloc: %s.\n", x, SPARSE_MATRIX_SIZE, ba.what());
-               fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
-               fprintf(stderr, "parameters to address mitigate memory use.\n");
+               fprintf(stderr, " Error - new(pScoring->ppfSparseFastXcorrData[%d][%d]). bad_alloc: %s.\n", x, SPARSE_MATRIX_SIZE, ba.what());
+               fprintf(stderr, " mango ran out of memory. Look into \"spectrum_batch_size\"\n");
+               fprintf(stderr, " parameters to address mitigate memory use.\n");
                return false;
             }
             for (y=0; y<SPARSE_MATRIX_SIZE; y++)
                pScoring->ppfSparseFastXcorrData[x][y]=0;
          }
          y=i-(x*SPARSE_MATRIX_SIZE);
-         pScoring->ppfSparseFastXcorrData[x][y] = pScoring->pfFastXcorrData[i];
+         pScoring->ppfSparseFastXcorrData[x][y] = pfFastXcorrData[i];
       }
    }
-
-   delete[] pScoring->pfFastXcorrData;
-   pScoring->pfFastXcorrData = NULL;
 
    return true;
 }
@@ -537,6 +432,8 @@ bool mango_preprocess::PreprocessSpectrum(Spectrum &spec,
       }
 
       g_pvQuery.push_back(pScoring);
+
+      //delete pScoring;  //Why does this this causes a segfault??
    }
 
    return true;
@@ -844,7 +741,7 @@ bool mango_preprocess::AllocateMemory(int maxNumThreads)
       catch (std::bad_alloc& ba)
       {
          fprintf(stderr,  " Error - new(pdTmpRawData[%d]). bad_alloc: %s.\n", iArraySize, ba.what());
-         fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
+         fprintf(stderr, "Mango ran out of memory. Look into \"spectrum_batch_size\"\n");
          fprintf(stderr, "parameters to address mitigate memory use.\n");
          return false;
       }
@@ -861,7 +758,7 @@ bool mango_preprocess::AllocateMemory(int maxNumThreads)
       catch (std::bad_alloc& ba)
       {
          fprintf(stderr,  " Error - new(pdTmpFastXcorrData[%d]). bad_alloc: %s.\n", iArraySize, ba.what());
-         fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
+         fprintf(stderr, "Mango ran out of memory. Look into \"spectrum_batch_size\"\n");
          fprintf(stderr, "parameters to address mitigate memory use.\n");
          return false;
       }
@@ -878,7 +775,7 @@ bool mango_preprocess::AllocateMemory(int maxNumThreads)
       catch (std::bad_alloc& ba)
       {
          fprintf(stderr,  " Error - new(pdTmpCorrelationData[%d]). bad_alloc: %s.\n", iArraySize, ba.what());
-         fprintf(stderr, "Xlinkx ran out of memory. Look into \"spectrum_batch_size\"\n");
+         fprintf(stderr, "Mango ran out of memory. Look into \"spectrum_batch_size\"\n");
          fprintf(stderr, "parameters to address mitigate memory use.\n");
          return false;
       }
@@ -893,18 +790,18 @@ bool mango_preprocess::DeallocateMemory(int maxNumThreads)
 {
    int i;
 
-   delete [] pbMemoryPool;
+   delete[] pbMemoryPool;
 
    for (i=0; i<maxNumThreads; i++)
    {
-      delete [] ppdTmpRawDataArr[i];
-      delete [] ppdTmpFastXcorrDataArr[i];
-      delete [] ppdTmpCorrelationDataArr[i];
+      delete[] ppdTmpRawDataArr[i];
+      delete[] ppdTmpFastXcorrDataArr[i];
+      delete[] ppdTmpCorrelationDataArr[i];
    }
 
-   delete [] ppdTmpRawDataArr;
-   delete [] ppdTmpFastXcorrDataArr;
-   delete [] ppdTmpCorrelationDataArr;
+   delete[] ppdTmpRawDataArr;
+   delete[] ppdTmpFastXcorrDataArr;
+   delete[] ppdTmpCorrelationDataArr;
 
    return true;
 }
