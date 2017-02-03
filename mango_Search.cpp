@@ -472,10 +472,20 @@ void mango_Search::SearchForPeptides(char *szMZXML,
       if (x>0)
          iNonEmptyScan++;
    }
+   for (int x=0; x<9; x++)
+      printf("%d  %d\n", x, iHistoSize[x]);
+   printf("iNonEmptyScans = %d\n", iNonEmptyScan);
+   exit(1);
 */
+
+
+//g_staticParams.options.bVerboseOutput = true;
 
    for (i=0; i<(int)pvSpectrumList.size(); i++)
    {
+
+if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber<=20500) // limit analysis range during dev/testing
+
       for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
       {
          for (int j = 0; j < NUM_BINS; j++)
@@ -767,9 +777,9 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 
       if (!g_staticParams.options.bVerboseOutput)
       {
-         printf("%3d%%", (int)(100.0*i/pvSpectrumList.size()));
+         printf("%5.1f%%", (float)(100.0*i/pvSpectrumList.size()));
          fflush(stdout);
-         printf("\b\b\b\b");
+         printf("\b\b\b\b\b\b");
       }
    }
 
