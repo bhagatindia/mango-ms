@@ -565,8 +565,8 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
                szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
 
-               szProtein = new char[peptide.phdpep_protein_name().length() + 1];
-               strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
+               //szProtein = new char[peptide.phdpep_protein_name().length() + 1];
+               //strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
                // should not be needed now that this is addressed in the hash building
@@ -603,8 +603,8 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
                szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
 
-               szProtein = new char[peptide.phdpep_protein_name().length() + 1];
-               strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
+               //szProtein = new char[peptide.phdpep_protein_name().length() + 1];
+               //strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
                // should not be needed now that this is addressed in the hash building

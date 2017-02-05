@@ -71,9 +71,17 @@ int main(int argc, char *argv[])
    int mass;
    for (int mass = 0; mass < 6000; mass++) {
       cout << "Retrieving peptides of mass " << mass << endl;
+
       vector<peptide_hash_database::phd_peptide> *peptides = phdp->phd_get_peptides_ofmass(mass);
+
       for (peptide_hash_database::phd_peptide peptide : *peptides) {
-         cout << peptide.phdpep_sequence() << " Name: " << peptide.phdpep_protein_name() << " Id: " << peptide.phdpep_protein_id()  << endl;
+         cout << "Peptide sequence: " << peptide.phdpep_sequence() << " is contained in proteins ";
+
+         for (int i = 0; i < peptide.phdpep_protein_list_size(); i++) {
+             cout << " Name: " << peptide.phdpep_protein_list(i).phdpro_name() << " Id: " << peptide.phdpep_protein_list(i).phdpro_id();
+         }
+
+         cout << endl;
       }
    }
 

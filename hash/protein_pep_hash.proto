@@ -7,12 +7,13 @@ message phd_protein {
 }
 
 message phd_peptide {
-   optional int32             phdpep_protein_id = 1;
-   optional int32             phdpep_pepstart = 2;
-   optional int32             phdpep_peplen = 3;
-   optional int32             phdpep_cleavedpep = 4; // This should be an enum; left, right, semi, full
+   //optional int32             phdpep_protein_id = 1;
+   //optional int32             phdpep_pepstart = 2;
+   //optional int32             phdpep_peplen = 3;
+   //optional int32             phdpep_cleavedpep = 4; // This should be an enum; left, right, semi, full
    optional string            phdpep_sequence = 5;
-   optional string            phdpep_protein_name = 6;
+   //optional string            phdpep_protein_name = 6;
+   repeated phd_protein       phdpep_protein_list = 7;
 }
 
 message phd_header {

@@ -392,12 +392,31 @@ void phd_add_peptide_into_hash (range *r, string peptide,
                                  const peptide_hash_database::phd_protein pro_seq,
                                  peptide_hash_database::phd_peptide_mass *pfile_pepm)
 {
-   peptide_hash_database::phd_peptide *new_peptide = pfile_pepm->add_phdpmass_peptide_list();
-   new_peptide->set_phdpep_protein_id(pro_seq.phdpro_id());
-   new_peptide->set_phdpep_sequence(peptide);
-   new_peptide->set_phdpep_pepstart(r->start);
-   new_peptide->set_phdpep_peplen(r->length);
-   new_peptide->set_phdpep_protein_name(pro_seq.phdpro_name());
+   int found = 0;
+   peptide_hash_database::phd_peptide *found_peptide;
+   // Loop over the list of peptides to find whether this peptide is always first
+   for (int i = 0; i < pfile_pepm->phdpmass_peptide_list_size(); i++)
+   {
+       if (!strcmp(pfile_pepm->phdpmass_peptide_list(i).phdpep_sequence().c_str(), 
+                    peptide.c_str())) {
+           if (found) {
+              cout << "A duplicate found when it is not supposed to be. So, panicking" << endl;
+              exit(1);
+           }
+           found = 1;
+           found_peptide = pfile_pepm->mutable_phdpmass_peptide_list(i);
+       }
+   }
+
+   if (!found) {
+       found_peptide = pfile_pepm->add_phdpmass_peptide_list();
+       found_peptide->set_phdpep_sequence(peptide);
+   }
+
+   // Add the protein to the found peptide list
+   peptide_hash_database::phd_protein* fp = found_peptide->add_phdpep_protein_list();
+   fp->set_phdpro_name(pro_seq.phdpro_name());
+   fp->set_phdpro_id(pro_seq.phdpro_id());
 }
 
 void phd_split_protein_sequence_peptides(enzyme_cut_params params, 
