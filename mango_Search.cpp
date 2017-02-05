@@ -48,7 +48,11 @@ void insert_pep_pq(char *pepArray[], char *proArray[], float xcorrArray[], char 
    // Insert first into the array
    if (xcorrArray[NUMPEPTIDES - 1] < ins_xcorr) {
       xcorrArray[NUMPEPTIDES - 1] = ins_xcorr;
+
+      if (pepArray[NUMPEPTIDES - 1]) delete [] pepArray[NUMPEPTIDES - 1];
       pepArray[NUMPEPTIDES - 1] = ins_pep;
+
+      if (proArray[NUMPEPTIDES - 1]) delete [] proArray[NUMPEPTIDES - 1];
       proArray[NUMPEPTIDES - 1] = ins_pro;
    } else return;
 
@@ -400,6 +404,10 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    char *toppep1[NUMPEPTIDES], *toppep2[NUMPEPTIDES], *toppepcombined[NUMPEPTIDES];
    char *toppro1[NUMPEPTIDES], *toppro2[NUMPEPTIDES], *topprocombined[NUMPEPTIDES];
    float xcorrPep1[NUMPEPTIDES], xcorrPep2[NUMPEPTIDES], xcorrCombined[NUMPEPTIDES];
+   for (ii = 0; ii < NUMPEPTIDES; ii++) {
+       toppep1[ii] = toppep2[ii] = toppepcombined[ii] = NULL;
+       toppro1[ii] = toppro2[ii] = topprocombined[ii] = NULL;
+   }
 
    strcpy(szOutputTxt, szMZXML);
    szOutputTxt[strlen(szOutputTxt)-5]='\0';
@@ -430,9 +438,9 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    FILE *fpxml;
    char szOutput[1024];
    char szBaseName[1024];
-   char combinedPep[512];
-   char szPeptide[512];
-   char szProtein[512];
+   char *combinedPep;
+   char *szPeptide;
+   char *szProtein;
 
    strcpy(szBaseName, szMZXML);
    if (!strcmp(szBaseName+strlen(szBaseName)-6, ".mzXML"))
@@ -554,7 +562,10 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
 
             for (peptide_hash_database::phd_peptide peptide : *peptides1)
             {
+               szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
+
+               szProtein = new char[peptide.phdpep_protein_name().length() + 1];
                strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
@@ -589,7 +600,10 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
 
             for (peptide_hash_database::phd_peptide peptide : *peptides2)
             {
+               szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
+
+               szProtein = new char[peptide.phdpep_protein_name().length() + 1];
                strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
@@ -712,6 +726,7 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
                {
                   if (toppep2[y] != NULL)
                   {
+                     combinedPep = new char[strlen(toppep1[x]) + strlen(toppep2[y]) + 4];
                      sprintf(combinedPep, "%s + %s", toppep1[x], toppep2[y]);
 
                      double dCombinedXcorr = xcorrPep1[x] + xcorrPep2[y];
@@ -781,6 +796,7 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
          fflush(stdout);
          printf("\b\b\b\b\b\b");
       }
+
    }
 
    mango_preprocess::DeallocateMemory(1);
