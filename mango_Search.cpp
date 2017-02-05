@@ -578,6 +578,7 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
                vdXcorr_pep1.push_back(dXcorr);
 
                hist_pep1[mango_get_histogram_bin_num(dXcorr)]++;
+               szProtein = NULL;
                insert_pep_pq(toppep1, toppro1, xcorrPep1, szPeptide, szProtein, dXcorr);
                num_pep1++;
                if (g_staticParams.options.bVerboseOutput)
@@ -616,6 +617,7 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
                vdXcorr_pep2.push_back(dXcorr);
 
                hist_pep2[mango_get_histogram_bin_num(dXcorr)]++;
+               szProtein = NULL;
                insert_pep_pq(toppep2, toppro2, xcorrPep2, szPeptide, szProtein, dXcorr);
                num_pep2++;
                if (g_staticParams.options.bVerboseOutput)
