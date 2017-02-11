@@ -81,8 +81,6 @@ void mango_preprocess::LoadAndPreprocessSpectra(MSReader &mstReader,
                iNumClearedPeaks++;
             }
 
-            // clear out contaminant peaks at 752, 
-
             i++;
          }
       }
@@ -602,6 +600,7 @@ bool mango_preprocess::LoadIons(struct Query *pScoring,
       dIntensity = mstSpectrum.at(i).intensity;
       i++;
 
+
       pScoring->_spectrumInfoInternal.dTotalIntensity += dIntensity;
 
       if ((dIntensity >= g_staticParams.options.dMinIntensity) && (dIntensity > 0.0))
@@ -620,6 +619,9 @@ bool mango_preprocess::LoadIons(struct Query *pScoring,
                if ( !(dIon > dMZ1-0.1 && dIon < dMZ1+1.1)    // if ion is not within range of either released precursors
                      && !(dIon > dMZ2-0.1 && dIon < dMZ2+1.1)
                      && !(dIon > dReporter-0.1 && dIon < dReporter+0.1)  // also remove 752 reporter ion (751.406065 + 1.00727646688)
+                     && !(dIon > 310.16-0.1 && dIon < 310.16+0.1)        // clear out contaminant peaks
+                     && !(dIon > 430.21-0.1 && dIon < 430.21+0.1)
+                     && !(dIon > 655.36-0.1 && dIon < 655.36+0.1)
                      && !(dIon > dReporter+PROTON_MASS-0.1 && dIon < dReporter+PROTON_MASS+0.1)
                      && !(dIon > dReporter+2*PROTON_MASS-0.1 && dIon < dReporter+2*PROTON_MASS+0.1))
                {

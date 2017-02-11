@@ -41,7 +41,6 @@ int main(int argc, char **argv)
    strcat(szHK1, "hk1");        // ms1 hardklor run
    strcat(szHK2, "hk2");        // ms2 hardklor run
 
-
    // This first pass read simply gets all ms/ms scans and their measured precursor m/z
    READ_MZXMLSCANS(szMZXML);
 
@@ -54,6 +53,8 @@ int main(int argc, char **argv)
    // Load and preprocess all MS/MS scans that have a pair of peptide masses that add up to precursor
    g_staticParams.tolerances.dFragmentBinSize = 0.02;   // 1.0005;
    g_staticParams.dInverseBinWidth = 1.0 /g_staticParams.tolerances.dFragmentBinSize;
+   g_staticParams.dOneMinusBinOffset = 1.0 - g_staticParams.tolerances.dFragmentBinStartOffset;
+
 
    int iCount=0;
    for (int ii=0; ii<(int)pvSpectrumList.size(); ii++)
@@ -436,6 +437,7 @@ void READ_HK2(char *szHK)
                   {
                      double dCombinedMass = pPeaks[i].dNeutralMass + pPeaks[ii].dNeutralMass + dReporter;
 
+
                      if (WITHIN_TOLERANCE(dCombinedMass, pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass))
                      {
                         if (pPeaks[i].iCharge + pPeaks[ii].iCharge <= pvSpectrumList.at(iListCt).iPrecursorCharge
@@ -610,6 +612,11 @@ void GENERATE_HK(char *szHK)
 int WITHIN_TOLERANCE(double dMass1, double dMass2)
 {
    double dPPM = 50.0;
+
+   if (dMass1 < 600.0 || dMass1 > 6000.0)  //FIX ... need to match this to hash range
+      return 0;
+   if (dMass2 < 600.0 || dMass2 > 6000.0)
+      return 0;
 
    if (1E6 * fabs(dMass1 - dMass2)/dMass2 <= dPPM
          || 1E6 * fabs(dMass1 + 1.003355 - dMass2)/dMass2 <= dPPM 

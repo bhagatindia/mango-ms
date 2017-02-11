@@ -492,7 +492,7 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    for (i=0; i<(int)pvSpectrumList.size(); i++)
    {
 
-if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber<=20500) // limit analysis range during dev/testing
+//if (pvSpectrumList.at(i).iScanNumber >=6705 && pvSpectrumList.at(i).iScanNumber<=6710) // limit analysis range during dev/testing
 
       for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
       {
@@ -542,7 +542,9 @@ if (pvSpectrumList.at(i).iScanNumber >=20000 && pvSpectrumList.at(i).iScanNumber
             exit(1);
          }
 
-         fprintf(fptxt, "%d\t%f\t%f", pvSpectrumList.at(i).iScanNumber, pep_mass1, pep_mass2);
+         fprintf(fptxt, "%d\t%f\t%f", pvSpectrumList.at(i).iScanNumber,
+               pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
+               pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2);
 
          double dXcorr = 0.0;
          vector<double> vdXcorr_pep1;  // store xcorr scores to be used in combined histogram
@@ -858,12 +860,13 @@ double mango_Search::XcorrScore(const char *szPeptide,
          }
 
          dYion += g_staticParams.massUtility.pdAAMassFragment[(int)szPeptide[iLenPeptide -1 - i]];
-         if (szPeptide[iLenPeptide -1 - i] == 'K' && !bYionLysine)
+         if (szPeptide[iLenPeptide -1 - i] == 'K' && !bYionLysine && i>0)
          {
             dYion += LYSINE_MOD;
             bYionLysine = true;
          }
 
+printf("%f %f\n", dBion, dYion);
          bin = BIN(dYion);
          x =  bin / SPARSE_MATRIX_SIZE;
          if (!(g_pvQuery.at(iWhichQuery)->ppfSparseFastXcorrData[x]==NULL || x>iMax)) // x should never be > iMax so this is just a safety check
@@ -969,6 +972,9 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
       if (szPep1[i]=='K')
          break;
    fprintf(fpxml, "        <mod_aminoacid_mass position=\"%d\" mass=\"325.127385\"/>\n", i+1);
+   for (i=0; i<strlen(szPep1); i++)
+      if (szPep1[i]=='C')
+         fprintf(fpxml, "        <mod_aminoacid_mass position=\"%d\" mass=\"160.03064805\"/>\n", i+1);
    fprintf(fpxml, "       </modification_info>\n");
    fprintf(fpxml, "       <xlink_score name=\"score\" value=\"%0.3E\"/>\n", dExpect1);
 // fprintf(fpxml, "       <xlink_score name=\"xcorr\" value=\"%0.3f\"/>\n", dXcorr1);
@@ -980,13 +986,18 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
       if (szPep2[i]=='K')
          break;
    fprintf(fpxml, "        <mod_aminoacid_mass position=\"%d\" mass=\"325.127385\"/>\n", i+1);
+   for (i=0; i<strlen(szPep2); i++)
+      if (szPep2[i]=='C')
+         fprintf(fpxml, "        <mod_aminoacid_mass position=\"%d\" mass=\"160.03046805\"/>\n", i+1);
    fprintf(fpxml, "       </modification_info>\n");
    fprintf(fpxml, "       <xlink_score name=\"score\" value=\"%0.3E\"/>\n", dExpect2);
 // fprintf(fpxml, "       <xlink_score name=\"delta_score\" value=\"%0.3f\"/>\n", dXcorr2);
    fprintf(fpxml, "      </linked_peptide>\n");
    fprintf(fpxml, "     </xlink>\n");
-   fprintf(fpxml, "     <search_score name=\"kojak_score\" value=\"%0.3E\"/>\n", dExpectCombined);
-   fprintf(fpxml, "     <search_score name=\"delta_score\" value=\"%0.3f\"/>\n", dXcorrCombined);
+//double dScore =  dExpect1 > dExpect2 ? dExpect1 : dExpect2;
+double dScore = dExpectCombined;
+   fprintf(fpxml, "     <search_score name=\"kojak_score\" value=\"%0.3E\"/>\n", dScore);
+   fprintf(fpxml, "     <search_score name=\"delta_score\" value=\"%0.3f\"/>\n", dExpectCombined); //dXcorrCombined);
    fprintf(fpxml, "     <search_score name=\"ppm_error\" value=\"0.0\"/>\n");
    fprintf(fpxml, "    </search_hit>\n");
    fprintf(fpxml, "   </search_result>\n");
