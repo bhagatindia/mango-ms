@@ -611,7 +611,7 @@ void GENERATE_HK(char *szHK)
 
 int WITHIN_TOLERANCE(double dMass1, double dMass2)
 {
-   double dPPM = 50.0;
+   double dPPM = 20.0;
 
    if (dMass1 < 600.0 || dMass1 > 6000.0)  //FIX ... need to match this to hash range
       return 0;

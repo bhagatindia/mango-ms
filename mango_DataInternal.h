@@ -479,7 +479,7 @@ struct StaticParams
       variableModParameters.iMaxVarModPerPeptide = 5;
 
       ionInformation.bUseNeutralLoss = 0;
-      ionInformation.iTheoreticalFragmentIons = 1;      // 0 = flanking peaks; 1 = no flanking peaks
+      ionInformation.iTheoreticalFragmentIons = 0;      // 0 = flanking peaks; 1 = no flanking peaks
       ionInformation.iIonVal[ION_SERIES_A] = 0;
       ionInformation.iIonVal[ION_SERIES_B] = 1;
       ionInformation.iIonVal[ION_SERIES_C] = 0;

@@ -494,6 +494,8 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 
 //if (pvSpectrumList.at(i).iScanNumber >=6705 && pvSpectrumList.at(i).iScanNumber<=6710) // limit analysis range during dev/testing
 
+      mango_preprocess::LoadAndPreprocessSpectra(mstReader, pvSpectrumList.at(i).iScanNumber, 0, 0);
+
       for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
       {
          for (int j = 0; j < NUM_BINS; j++)
@@ -506,7 +508,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
          double dMZ2 =  (pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2
                + pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2 * PROTON_MASS)/ pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2;
 
-         mango_preprocess::LoadAndPreprocessSpectra(mstReader, pvSpectrumList.at(i).iScanNumber, dMZ1, dMZ2);
  
          for (int li = 0; li < NUMPEPTIDES; li++)
          {
@@ -780,19 +781,19 @@ void mango_Search::SearchForPeptides(char *szMZXML,
 //             pvSpectrumList.at(i).iPrecursorCharge,
                iCharge,                                     // report largest charge of the two released peptides
                iIndex, pvSpectrumList.at(i).iScanNumber);
-
-         for (int y=0; y<(int)g_pvQuery.size(); y++)
-         {
-            // need to free processed spectrum data here
-            for (int x=0;x<g_pvQuery.at(y)->iFastXcorrData;x++)
-            {
-               if (g_pvQuery.at(y)->ppfSparseFastXcorrData[x] != NULL)
-                  delete[] g_pvQuery.at(y)->ppfSparseFastXcorrData[x];
-            }
-         }
-
-         g_pvQuery.clear();
       }
+
+      for (int y=0; y<(int)g_pvQuery.size(); y++)
+      {
+         // need to free processed spectrum data here
+         for (int x=0;x<g_pvQuery.at(y)->iFastXcorrData;x++)
+         {
+            if (g_pvQuery.at(y)->ppfSparseFastXcorrData[x] != NULL)
+               delete[] g_pvQuery.at(y)->ppfSparseFastXcorrData[x];
+         }
+      }
+
+      g_pvQuery.clear();
 
       if (!g_staticParams.options.bVerboseOutput)
       {
@@ -866,7 +867,6 @@ double mango_Search::XcorrScore(const char *szPeptide,
             bYionLysine = true;
          }
 
-printf("%f %f\n", dBion, dYion);
          bin = BIN(dYion);
          x =  bin / SPARSE_MATRIX_SIZE;
          if (!(g_pvQuery.at(iWhichQuery)->ppfSparseFastXcorrData[x]==NULL || x>iMax)) // x should never be > iMax so this is just a safety check
@@ -994,8 +994,8 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
 // fprintf(fpxml, "       <xlink_score name=\"delta_score\" value=\"%0.3f\"/>\n", dXcorr2);
    fprintf(fpxml, "      </linked_peptide>\n");
    fprintf(fpxml, "     </xlink>\n");
-//double dScore =  dExpect1 > dExpect2 ? dExpect1 : dExpect2;
-double dScore = dExpectCombined;
+double dScore =  dExpect1 > dExpect2 ? dExpect1 : dExpect2;
+//double dScore = dExpectCombined;
    fprintf(fpxml, "     <search_score name=\"kojak_score\" value=\"%0.3E\"/>\n", dScore);
    fprintf(fpxml, "     <search_score name=\"delta_score\" value=\"%0.3f\"/>\n", dExpectCombined); //dXcorrCombined);
    fprintf(fpxml, "     <search_score name=\"ppm_error\" value=\"0.0\"/>\n");
