@@ -568,8 +568,8 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
 
-               //szProtein = new char[peptide.phdpep_protein_name().length() + 1];
-               //strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
+               szProtein = new char[peptide.phdpep_protein_list(0).phdpro_name().length() + 1];
+               strcpy(szProtein, (peptide.phdpep_protein_list(0).phdpro_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
                // should not be needed now that this is addressed in the hash building
@@ -581,7 +581,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                vdXcorr_pep1.push_back(dXcorr);
 
                hist_pep1[mango_get_histogram_bin_num(dXcorr)]++;
-               szProtein = NULL;
                insert_pep_pq(toppep1, toppro1, xcorrPep1, szPeptide, szProtein, dXcorr);
                num_pep1++;
                if (g_staticParams.options.bVerboseOutput)
@@ -607,8 +606,8 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                szPeptide = new char[peptide.phdpep_sequence().length() + 1];
                strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
 
-               //szProtein = new char[peptide.phdpep_protein_name().length() + 1];
-               //strcpy(szProtein, (peptide.phdpep_protein_name()).c_str() );
+               szProtein = new char[peptide.phdpep_protein_list(0).phdpro_name().length() + 1];
+               strcpy(szProtein, (peptide.phdpep_protein_list(0).phdpro_name()).c_str() );
 
                // sanity check to ignore peptides w/unknown AA residues
                // should not be needed now that this is addressed in the hash building
@@ -620,7 +619,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
                vdXcorr_pep2.push_back(dXcorr);
 
                hist_pep2[mango_get_histogram_bin_num(dXcorr)]++;
-               szProtein = NULL;
                insert_pep_pq(toppep2, toppro2, xcorrPep2, szPeptide, szProtein, dXcorr);
                num_pep2++;
                if (g_staticParams.options.bVerboseOutput)
