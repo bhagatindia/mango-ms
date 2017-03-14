@@ -13,9 +13,10 @@
 using namespace std;
 
 #include "mango-hash.h"
+#include "../mango_DataInternal.h"
 
-#define MIN_FRAGMENT_MASS 600
-#define MAX_FRAGMENT_MASS 6000
+#define MIN_PEPTIDE_MASS 600+LYSINE_MOD
+#define MAX_PEPTIDE_MASS 5000
 
 #define MAX_EDGES 30
 
@@ -159,6 +160,7 @@ void phd_read_protein_database(string file, peptide_hash_database::phd_file& pfi
 
    while (std::getline(fstream, line)) {
       if (line.at(0) == '>') {
+         line.erase(0,1);                 // don't include '>' in protein name
          record = pfile.add_phdpro();
          pcount++;
          phd_split_string(line, split_char, split_tokens);
@@ -444,7 +446,7 @@ void phd_split_protein_sequence_peptides(enzyme_cut_params params,
                " Right is " << r->right << " and the peptide is " << peptide << 
                " and its mass is " << mass << endl;
       */
-      if (mass < MAX_FRAGMENT_MASS) {
+      if (MIN_PEPTIDE_MASS < mass && mass < MAX_PEPTIDE_MASS) {
          phd_add_peptide_into_hash(r, peptide, pro_seq, pfile.mutable_phdpepm(mass));
       }
    }
@@ -465,7 +467,7 @@ void phd_add_peptide_hash_database (peptide_hash_database::phd_file &pfile,
    const peptide_hash_database::phd_header hdr = pfile.phdhdr();
    char szTmp[24];
 
-   for (int i = 0; i < MAX_FRAGMENT_MASS; i++) {
+   for (int i = 0; i < MAX_PEPTIDE_MASS; i++) {
       peptide_hash_database::phd_peptide_mass *pepm = pfile.add_phdpepm();
       pepm->set_phdpmass_mass(i);
    }
