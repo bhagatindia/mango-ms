@@ -21,6 +21,8 @@
 
 class MangoSearchManager;
 
+#define LYSINE_MOD                  197.032422
+
 #define PROTON_MASS                 1.00727646688
 #define C13_DIFF                    1.00335483
 
