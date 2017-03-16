@@ -426,16 +426,15 @@ void READ_HK2(char *szHK)
             // where the charge states of the peptides can't be larger than precursor charge.
             int i;
             int ii;
-            double dReporter = 751.406065;   // need to make this a parameter entry
 
             for (i=0; i<iNumPeaks; i++)
             {
                for (ii=i; ii<iNumPeaks; ii++)
                {
                   // Placing check here that the peptide masses must be greater than some minimum
-                  if (pPeaks[i].dNeutralMass >= 500.0 && pPeaks[ii].dNeutralMass >= 500.0)
+                  if (pPeaks[i].dNeutralMass >= 600.0+LYSINE_MOD && pPeaks[ii].dNeutralMass >= 600.0+LYSINE_MOD)
                   {
-                     double dCombinedMass = pPeaks[i].dNeutralMass + pPeaks[ii].dNeutralMass + dReporter;
+                     double dCombinedMass = pPeaks[i].dNeutralMass + pPeaks[ii].dNeutralMass + g_staticParams.options.dReporterMass;
 
 
                      if (WITHIN_TOLERANCE(dCombinedMass, pvSpectrumList.at(iListCt).dHardklorPrecursorNeutralMass))

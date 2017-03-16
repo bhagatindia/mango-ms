@@ -38,7 +38,8 @@ public:
 private:
 
    static double XcorrScore(const char *szPeptide,
-                     int iScanNumber);
+                            int iScanNumber,
+                            bool bSilacHeavy);
 
    static bool CalculateEValue(int *hist_pep,
                                int iMatchPepCount,

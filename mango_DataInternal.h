@@ -99,6 +99,7 @@ struct Options             // output parameters
    double dRemovePrecursorTol;
    double dPeptideMassLow;       // MH+ mass
    double dPeptideMassHigh;      // MH+ mass
+   double dReporterMass;
 
    IntRange scanRange;
    DoubleRange clearMzRange;
@@ -136,6 +137,7 @@ struct Options             // output parameters
       clearMzRange = a.clearMzRange;
       dPeptideMassLow = a.dPeptideMassLow;
       dPeptideMassHigh = a.dPeptideMassHigh;
+      dReporterMass = a.dReporterMass;
       strcpy(szActivationMethod, a.szActivationMethod);
 
       return *this;
@@ -525,6 +527,7 @@ struct StaticParams
       options.dMinIntensity = 0.0;
       options.dPeptideMassLow = 2000.0;
       options.dPeptideMassHigh = 8000.0;
+      options.dReporterMass = 751.40508;
       strcpy(options.szActivationMethod, "ALL");
       // End of mzXML specific parameters.
 
