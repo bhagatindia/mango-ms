@@ -30,16 +30,10 @@ struct PrecursorsStruct
 struct ScanDataStruct
 {
    int    iScanNumber;
-
-// int    iCharge1;           // charge state of released peptide1
-// int    iCharge2;           // charge state of released peptide2
-   double dNeutralMass1;      // precursor m/z of released peptide1
-   double dNeutralMass2;      // precursor m/z of released peptide2
-
    int    iPrecursorScanNumber;
    int    iPrecursorCharge;   // charge state of intact precursor
    double dPrecursorMZ;       // intact precursor m/z
-   double dPrecursorMH;       // intact precursor mh+
+   double dPrecursorNeutralMass;       // intact precursor Neutralmass
    double dHardklorPrecursorNeutralMass;  // precursor m/z found from Hardklor
 
    vector<PrecursorsStruct> pvdPrecursors;

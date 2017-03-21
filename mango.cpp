@@ -179,8 +179,6 @@ void READ_MZXMLSCANS(char *szMZXML)
          pData.iScanNumber = iScanNumber;
          pData.iPrecursorScanNumber = iMS1ScanNumber;
          pData.dHardklorPrecursorNeutralMass = 0.0;
-         pData.dNeutralMass1 = 0.0;
-         pData.dNeutralMass2 = 0.0;
 
          pvSpectrumList.push_back(pData);
       }
@@ -618,8 +616,10 @@ int WITHIN_TOLERANCE(double dMass1, double dMass2)
       return 0;
 
    if (1E6 * fabs(dMass1 - dMass2)/dMass2 <= dPPM
-         || 1E6 * fabs(dMass1 + 1.003355 - dMass2)/dMass2 <= dPPM 
-         || 1E6 * fabs(dMass1 + 2*1.003355 - dMass2)/dMass2 <= dPPM)
+         || 1E6 * fabs(dMass1 +   1.003355 - dMass2)/dMass2 <= dPPM 
+         || 1E6 * fabs(dMass1 + 2*1.003355 - dMass2)/dMass2 <= dPPM 
+         || 1E6 * fabs(dMass1 -   1.003355 - dMass2)/dMass2 <= dPPM 
+         || 1E6 * fabs(dMass1 - 2*1.003355 - dMass2)/dMass2 <= dPPM)
       return 1;
    else
       return 0;

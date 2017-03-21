@@ -614,17 +614,20 @@ bool mango_preprocess::LoadIons(struct Query *pScoring,
 
             if ((iBinIon < pScoring->_spectrumInfoInternal.iArraySize) && (dIntensity > pdTmpRawData[iBinIon]))
             {
-               if ( !(dIon > dMZ1-0.1 && dIon < dMZ1+1.1)    // if ion is not within range of either released precursors
+               if (     !(dIon > dMZ1-0.1 && dIon < dMZ1+1.1)    // if ion is not within range of either released precursors
                      && !(dIon > dMZ2-0.1 && dIon < dMZ2+1.1)
                      && !(dIon > 310.16-0.1 && dIon < 310.16+0.1)        // clear out contaminant peaks
+                     && !(dIon > 311.16-0.1 && dIon < 311.16+0.1)
                      && !(dIon > 430.21-0.1 && dIon < 430.21+0.1)
+                     && !(dIon > 431.22-0.1 && dIon < 431.22+0.1)
                      && !(dIon > 655.36-0.1 && dIon < 655.36+0.1)
+                     && !(dIon > 677.38-0.1 && dIon < 677.38+0.1)
                      && !(dIon > g_staticParams.options.dReporterMass+PROTON_MASS-0.1    // also remove 752 reporter ion and isotopes
-                        && dIon < g_staticParams.options.dReporterMass+PROTON_MASS+0.1)
+                       && dIon < g_staticParams.options.dReporterMass+PROTON_MASS+0.1)
                      && !(dIon > g_staticParams.options.dReporterMass+2*PROTON_MASS-0.1
-                        && dIon < g_staticParams.options.dReporterMass+2*PROTON_MASS+0.1)
+                       && dIon < g_staticParams.options.dReporterMass+2*PROTON_MASS+0.1)
                      && !(dIon > g_staticParams.options.dReporterMass+3*PROTON_MASS-0.1
-                        && dIon < g_staticParams.options.dReporterMass+3*PROTON_MASS+0.1))
+                       && dIon < g_staticParams.options.dReporterMass+3*PROTON_MASS+0.1))
                {
                   if (dIntensity > pdTmpRawData[iBinIon])
                      pdTmpRawData[iBinIon] = dIntensity;

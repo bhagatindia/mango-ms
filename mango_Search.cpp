@@ -463,26 +463,35 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    }
 
 /*
-   int iHistoSize[10];
+   int iHistoSize[20];
    int iNonEmptyScan = 0;
-   for (int x=0; x<10; x++)
+   int iEmptyScan = 0;
+   for (int x=0; x<=11; x++)
       iHistoSize[x]=0;
    for (i=0; i<(int)pvSpectrumList.size(); i++)
    {
       int x = (int)pvSpectrumList.at(i).pvdPrecursors.size();
-      if (x>9)
-         x=9;
+
+      if (x>=20)
+         x=11;
+      else if (x>=10)
+         x=10;
 
       iHistoSize[x] += 1;
       
       if (x>0)
          iNonEmptyScan++;
+      else
+         iEmptyScan++;
    }
-   for (int x=0; x<9; x++)
+   printf("\n");
+   for (int x=0; x<=11; x++)
       printf("%d  %d\n", x, iHistoSize[x]);
    printf("iNonEmptyScans = %d\n", iNonEmptyScan);
+   printf("iEmptyScans = %d\n", iEmptyScan);
    exit(1);
 */
+
 
 
 //g_staticParams.options.bVerboseOutput = true;
@@ -490,8 +499,36 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    bool bSilac = false;
    int y=0;
 
+/*
+printf("MS1_scan\tMS2_scan\tintact_precursor_neutral_mass\tintact_precursor_mz\tintact_precursor_charge\treleased_neutral1\trelease_neutral2\treleased_mz1\treleased_mz2\trelease_charge1\treleased_charge2\n");
+*/
+
    for (i=0; i<(int)pvSpectrumList.size(); i++)
    {
+
+/*
+for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
+{
+   double dMZ1 =  (pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1
+                  + pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1 * PROTON_MASS)/ pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1;
+   double dMZ2 =  (pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2
+                  + pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2 * PROTON_MASS)/ pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2;
+
+   printf("%d\t%d\t%f\t%f\t%d\t%f\t%f\t%f\t%f\t%d\t%d\n",
+         pvSpectrumList.at(i).iPrecursorScanNumber,
+         pvSpectrumList.at(i).iScanNumber,
+         pvSpectrumList.at(i).dPrecursorMZ * pvSpectrumList.at(i).iPrecursorCharge - (pvSpectrumList.at(i).iPrecursorCharge * PROTON_MASS),
+         pvSpectrumList.at(i).dPrecursorMZ,
+         pvSpectrumList.at(i).iPrecursorCharge,
+         pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
+         pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
+         dMZ1,
+         dMZ2,
+         pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1,
+         pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2);
+
+}
+*/
 
       if (1) //pvSpectrumList.at(i).iScanNumber >=35475 && pvSpectrumList.at(i).iScanNumber<=35475) // limit analysis range during dev/testing
       {
@@ -948,16 +985,6 @@ double mango_Search::XcorrScore(const char *szPeptide,
       dXcorr = 0.0;
 
    return dXcorr;
-}
-
-
-bool mango_Search::WithinTolerance(double dMass1,
-                                    double dMass2)
-{
-   if (dMass1>0.0 &&  (1E6 * fabs(dMass1 - dMass2)/dMass1) <= g_staticParams.tolerances.dInputTolerance)
-      return true;
-   else
-      return false;
 }
 
 
