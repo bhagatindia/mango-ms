@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
    
    //retrieving peptides of mass 256
    int mass;
-   for (int mass = 0; mass < 6000; mass++) {
+   for (int mass = 840; mass < 850; mass++) {
       cout << "Retrieving peptides of mass " << mass << endl;
 
       vector<peptide_hash_database::phd_peptide> *peptides = phdp->phd_get_peptides_ofmass(mass);
