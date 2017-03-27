@@ -15,7 +15,7 @@ using namespace std;
 #include "mango-hash.h"
 #include "../mango_DataInternal.h"
 
-#define MIN_PEPTIDE_MASS 600+LYSINE_MOD
+#define MIN_PEPTIDE_MASS 1
 #define MAX_PEPTIDE_MASS 5000
 
 #define MAX_EDGES 30
@@ -275,8 +275,32 @@ void phd_handle_missed_cleavage(enzyme_cut_params params, const string protein_s
 
    if (missed_cleavage) {
       int num_cuts = nocut_splits.size();
-      for (int i = 0; i < num_cuts - 1; i++) {
-         range *r = nocut_splits.at(i), *r_next = nocut_splits.at(i+1);
+      for (int i = 0; i < num_cuts; i++) {
+         range *r = nocut_splits.at(i);
+	 // Before merging, check for the internal K: if so, dont merge, just emit and continue
+	 string peptide = protein_seq.substr(r->start, r->length);
+	 if (peptide.find_first_of("K") != r->length - 1) {
+            range *r_new = new range;
+            r_new->start = r->start;
+            r_new->length = r->length;
+            r_new->missed = peptide.find_first_of("K");
+            r_new->left = r_new->right = 0;
+            final_splits.push_back(r_new);
+	    continue;
+	 }
+
+	 // If this is the last peptide, add to the final
+	 if (i+1 >= nocut_splits.size()) {
+            range *r_new = new range;
+            r_new->start = r->start;
+            r_new->length = r->length;
+            r_new->missed = 0;
+            r_new->left = r_new->right = 0;
+            final_splits.push_back(r_new);
+	    break;
+	 }
+
+         range *r_next = nocut_splits.at(i+1);
          //cout << "Peeking at the end " << (protein_seq.c_str())[r->start + r->length -1] << endl;
          if ((protein_seq.c_str())[r->start + r->length -1] == 'K') {
             range *r_new = new range;
