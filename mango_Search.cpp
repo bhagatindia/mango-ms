@@ -612,7 +612,7 @@ for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
                   dSilacMass = 0.0;
                }
 
-               for (int x=0; x<2; x++)
+               for (int x=0; x<3; x++)
                {
                   vector<peptide_hash_database::phd_peptide> *peptides1 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass1 - dSilacMass - x*1.003355, dTolerance);
       
@@ -675,7 +675,7 @@ for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
                   dSilacMass = 0.0;
                }
 
-               for (int x=0; x<2; x++)
+               for (int x=0; x<3; x++)
                {
                   vector<peptide_hash_database::phd_peptide> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass2 - dSilacMass - x*1.003355, dTolerance);
       
