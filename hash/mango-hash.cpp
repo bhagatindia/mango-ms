@@ -279,7 +279,7 @@ void phd_handle_missed_cleavage(enzyme_cut_params params, const string protein_s
          range *r = nocut_splits.at(i);
 	 // Before merging, check for the internal K: if so, dont merge, just emit and continue
 	 string peptide = protein_seq.substr(r->start, r->length);
-	 if (peptide.find_first_of("K") != r->length - 1) {
+	 if ((peptide.find_first_of("K") != r->length - 1) && (peptide.find_first_of("K") != std::string::npos)) {
             range *r_new = new range;
             r_new->start = r->start;
             r_new->length = r->length;
@@ -289,16 +289,7 @@ void phd_handle_missed_cleavage(enzyme_cut_params params, const string protein_s
 	    continue;
 	 }
 
-	 // If this is the last peptide, add to the final
-	 if (i+1 >= nocut_splits.size()) {
-            range *r_new = new range;
-            r_new->start = r->start;
-            r_new->length = r->length;
-            r_new->missed = 0;
-            r_new->left = r_new->right = 0;
-            final_splits.push_back(r_new);
-	    break;
-	 }
+	 if (i+1 >= num_cuts) continue;
 
          range *r_next = nocut_splits.at(i+1);
          //cout << "Peeking at the end " << (protein_seq.c_str())[r->start + r->length -1] << endl;
