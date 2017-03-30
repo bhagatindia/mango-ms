@@ -7,6 +7,7 @@
 #include <fstream>
 #include <set>
 #include <cmath>
+#include <algorithm>
 
 #include "protein_pep_hash.pb.h"
 
@@ -159,7 +160,7 @@ void phd_read_protein_database(string file, peptide_hash_database::phd_file& pfi
    vector<string> split_tokens;
 
    while (std::getline(fstream, line)) {
-      if (line.at(0) == '>') {
+      if (line.size() > 0 && line.at(0) == '>') {
          line.erase(0,1);                 // don't include '>' in protein name
          record = pfile.add_phdpro();
          pcount++;
@@ -168,6 +169,7 @@ void phd_read_protein_database(string file, peptide_hash_database::phd_file& pfi
          record->set_phdpro_id(pcount);
       } else {
          // append or start a new one
+         line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
          (record->mutable_phdpro_pepseq())->append(line);
       }
       split_tokens.clear();
