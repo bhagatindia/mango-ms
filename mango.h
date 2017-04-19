@@ -36,7 +36,7 @@ struct ScanDataStruct
    int    iPrecursorCharge;   // charge state of intact precursor
    double dPrecursorMZ;       // intact precursor m/z
    double dPrecursorNeutralMass;       // intact precursor Neutralmass
-   double dHardklorPrecursorNeutralMass;  // precursor m/z found from Hardklor
+   double dHardklorPrecursorNeutralMass;  // precursor neutral mass found from Hardklor
 
    vector<PrecursorsStruct> pvdPrecursors;
 };

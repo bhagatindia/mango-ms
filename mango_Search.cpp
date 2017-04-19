@@ -439,13 +439,47 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    char *szPeptide;
    char *szProtein;
 
+
+
    strcpy(szBaseName, szMZXML);
    if (!strcmp(szBaseName+strlen(szBaseName)-6, ".mzXML"))
       szBaseName[strlen(szBaseName)-6]='\0';
    else if (!strcmp(szBaseName+strlen(szBaseName)-6, ".mzML"))
       szBaseName[strlen(szBaseName)-5]='\0';
-   sprintf(szOutput, "%s.pep.xml", szBaseName);
 
+
+   if (g_staticParams.options.iDumpRelationshipData)
+   {
+      sprintf(szOutput, "%s.peaks", szBaseName);
+      if ((fpxml=fopen(szOutput, "w")) == NULL)
+      {
+         printf(" Error - cannot write output %s\n", szOutput);
+         return;
+      }
+
+      fprintf(fpxml, "scan\tintact_mass\tintact_charge\tpep1_mass\tpep1_charge\tpep2_mass\tpep2_charge\n");
+      for (i=0; i<(int)pvSpectrumList.size(); i++)
+      {
+         for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
+         {
+            fprintf(fpxml, "%d\t", pvSpectrumList.at(i).iScanNumber);
+            fprintf(fpxml, "%f\t", pvSpectrumList.at(i).dHardklorPrecursorNeutralMass);
+            fprintf(fpxml, "%d\t", pvSpectrumList.at(i).iPrecursorCharge);
+            fprintf(fpxml, "%f\t", pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1);
+            fprintf(fpxml, "%d\t", pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1);
+            fprintf(fpxml, "%f\t", pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2);
+            fprintf(fpxml, "%d\n", pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2);
+         }
+      }
+
+      fclose(fpxml);
+      printf(" created:  %s\n", szOutput);
+
+      if (g_staticParams.options.iDumpRelationshipData==2)
+         return;
+   }
+
+   sprintf(szOutput, "%s.pep.xml", szBaseName);
    if ((fpxml=fopen(szOutput, "w")) == NULL)
    {
       printf(" Error - cannot write pepXML output %s\n", szOutput);

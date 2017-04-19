@@ -96,6 +96,7 @@ struct Options             // output parameters
    int iMimicCometPepXML;
    int iReportedScore;
    int iSilacHeavy;
+   int iDumpRelationshipData;
    double dMinIntensity;
    double dRemovePrecursorTol;
    double dPeptideMassLow;       // MH+ mass
@@ -144,6 +145,7 @@ struct Options             // output parameters
       iMimicCometPepXML = a.iMimicCometPepXML;
       iReportedScore = a.iReportedScore;
       iSilacHeavy = a.iSilacHeavy;
+      iDumpRelationshipData = a.iDumpRelationshipData;
       strcpy(szActivationMethod, a.szActivationMethod);
 
       return *this;
@@ -529,6 +531,7 @@ struct StaticParams
       options.iMimicCometPepXML = 0;
       options.iReportedScore = 0;
       options.iSilacHeavy = 0;
+      options.iDumpRelationshipData= 0;
 
       options.clearMzRange.dStart = 0.0;
       options.clearMzRange.dEnd = 0.0;

@@ -20,10 +20,10 @@ struct ParamsStruct pParams;
 
 int main(int argc, char **argv)
 {
+   printf("\n Mango version \"%s\"\n\n", mango_version);
+
    if (argc < 2)
       Usage(argv[0]);
-
-   printf("\n Mango version \"%s\"\n", mango_version);
 
    vector<InputFileInfo*> pvInputFiles;
    IMangoSearchManager* pMangoSearchMgr = GetMangoSearchManager();
@@ -46,10 +46,6 @@ int main(int argc, char **argv)
 
 void Usage(char *pszCmd)
 {
-   printf("\n");
-   printf(" Mango version \"%s\"\n", mango_version);
-   printf("\n");
-   printf("\n");
    printf(" Mango usage:  %s [options] <input_files>\n", pszCmd);
    printf("\n");
    printf("       options:  -p         to print out a mango.params file (named mango.params.new)\n");
@@ -74,9 +70,8 @@ void ProcessCmdLine(int argc,
    char *arg;
 
    if (iStartInputFile == argc)
-   {
+   {  
       char szErrorMsg[256];
-      sprintf(szErrorMsg, "\n Mango version %s\n\n", mango_version);
       sprintf(szErrorMsg+strlen(szErrorMsg), " Error - no input files specified so nothing to do.\n");
       logerr(szErrorMsg);
       exit(1);
@@ -177,7 +172,6 @@ void PrintParams(void)
    if ( (fp=fopen("mango.params.new", "w"))==NULL)
    {
       char szErrorMsg[256];
-      sprintf(szErrorMsg, "\n Mango version %s\n\n", mango_version);
       sprintf(szErrorMsg+strlen(szErrorMsg), " Error - cannot write file mango.params.new\n");
       logerr(szErrorMsg);
       exit(1);
@@ -194,7 +188,8 @@ void PrintParams(void)
    fprintf(fp, "mimic_comet_pepxml = %d                          # if 1, will write out IDs as separate spectrum_query entries\n", g_staticParams.options.iMimicCometPepXML);
    fprintf(fp, "reported_score = %d                              # # 0=worst E-value; 1=combined E-value\n", g_staticParams.options.iReportedScore);
    fprintf(fp, "silac_heavy = %d                                 # 0=normal/light search; 1=SILAC heavy search\n", g_staticParams.options.iSilacHeavy);
-
+   fprintf(fp, "dump_relationship_data = %d                      # 0=no, 1=yes, 2=yes but do not do search\n", g_staticParams.options.iDumpRelationshipData);
+      
    logout("\n Created:  mango.params.new\n\n");
    fclose(fp);
 }
@@ -221,7 +216,6 @@ void LoadParameters(char *pszParamsFile,
 
    if ((fp=fopen(pszParamsFile, "r")) == NULL)
    {
-      sprintf(szErrorMsg, "\n Mango version %s\n\n", mango_version);
       sprintf(szErrorMsg+strlen(szErrorMsg), " Error - cannot open parameter file \"%s\".\n", pszParamsFile);
       logerr(szErrorMsg);
       exit(1);
@@ -254,7 +248,6 @@ void LoadParameters(char *pszParamsFile,
 
    if (!bValidParamsFile)
    {
-      sprintf(szErrorMsg, "\n Mango version %s\n\n", mango_version);
       sprintf(szErrorMsg+strlen(szErrorMsg), " The mango.params file is from version %s\n", szVersion);
       sprintf(szErrorMsg+strlen(szErrorMsg), " Please update your mango.params file.  You can generate\n");
       sprintf(szErrorMsg+strlen(szErrorMsg), " a new parameters file using \"mango -p\"\n\n");
@@ -324,60 +317,67 @@ void LoadParameters(char *pszParamsFile,
                pSearchMgr->SetParam("fasta_hash", szFile, szFile);
             }
             else if (!strcmp(szParamName, "mass_tolerance_relationship"))
-            {
+            {  
                sscanf(szParamVal, "%lf", &dDoubleParam);
                szParamStringVal[0] = '\0';
                sprintf(szParamStringVal, "%lf", dDoubleParam);
                pSearchMgr->SetParam("mass_tolerance_relationship", szParamStringVal, dDoubleParam);
             }
             else if (!strcmp(szParamName, "mass_tolerance_peptide"))
-            {
+            {  
                sscanf(szParamVal, "%lf", &dDoubleParam);
                szParamStringVal[0] = '\0';
                sprintf(szParamStringVal, "%lf", dDoubleParam);
                pSearchMgr->SetParam("mass_tolerance_peptide", szParamStringVal, dDoubleParam);
             }
             else if (!strcmp(szParamName, "mass_tolerance_fragment"))
-            {
+            {  
                sscanf(szParamVal, "%lf", &dDoubleParam);
                szParamStringVal[0] = '\0';
                sprintf(szParamStringVal, "%lf", dDoubleParam);
                pSearchMgr->SetParam("mass_tolerance_fragment", szParamStringVal, dDoubleParam);
             }
             else if (!strcmp(szParamName, "reporter_neutral_mass"))
-            {
+            {  
                sscanf(szParamVal, "%lf", &dDoubleParam);
                szParamStringVal[0] = '\0';
                sprintf(szParamStringVal, "%lf", dDoubleParam);
                pSearchMgr->SetParam("reporter_neutral_mass", szParamStringVal, dDoubleParam);
             }
             else if (!strcmp(szParamName, "lysine_stump_mass"))
-            {
+            {  
                sscanf(szParamVal, "%lf", &dDoubleParam);
                szParamStringVal[0] = '\0';
                sprintf(szParamStringVal, "%lf", dDoubleParam);
                pSearchMgr->SetParam("lysine_stump_mass", szParamStringVal, dDoubleParam);
             }
             else if (!strcmp(szParamName, "mimic_comet_pepxml"))
-            {
+            {  
                sscanf(szParamVal, "%d", &iIntParam);
                szParamStringVal[0] = '\0';
-               sprintf(szParamStringVal, "%d", iIntParam);
+               sprintf(szParamStringVal, "%d", iIntParam); 
                pSearchMgr->SetParam("mimic_comet_pepxml", szParamStringVal, iIntParam);
             }
             else if (!strcmp(szParamName, "reported_score"))
-            {
+            {  
                sscanf(szParamVal, "%d", &iIntParam);
                szParamStringVal[0] = '\0';
-               sprintf(szParamStringVal, "%d", iIntParam);
+               sprintf(szParamStringVal, "%d", iIntParam); 
                pSearchMgr->SetParam("reported_score", szParamStringVal, iIntParam);
             }
             else if (!strcmp(szParamName, "silac_heavy"))
-            {
+            {  
                sscanf(szParamVal, "%d", &iIntParam);
                szParamStringVal[0] = '\0';
-               sprintf(szParamStringVal, "%d", iIntParam);
+               sprintf(szParamStringVal, "%d", iIntParam); 
                pSearchMgr->SetParam("silac_heavy", szParamStringVal, iIntParam);
+            }
+            else if (!strcmp(szParamName, "dump_relationship_data"))
+            {  
+               sscanf(szParamVal, "%d", &iIntParam);
+               szParamStringVal[0] = '\0';
+               sprintf(szParamStringVal, "%d", iIntParam); 
+               pSearchMgr->SetParam("dump_relationship_data", szParamStringVal, iIntParam);
             }
             else
             {

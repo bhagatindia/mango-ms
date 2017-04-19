@@ -76,6 +76,7 @@ bool MangoSearchManager::InitializeStaticParams()
    GetParamValue("mimic_comet_pepxml", g_staticParams.options.iMimicCometPepXML);
    GetParamValue("reported_score", g_staticParams.options.iReportedScore);
    GetParamValue("silac_heavy", g_staticParams.options.iSilacHeavy);
+   GetParamValue("dump_relationship_data", g_staticParams.options.iDumpRelationshipData);
 
    return true;
 }
@@ -407,6 +408,8 @@ bool MangoSearchManager::DoSearch()
       mango_Search::SearchForPeptides(szMZXML, szFullPathFasta, params, szFullPathHash);
 
       pvSpectrumList.clear();
+
+      printf("\n done: %s\n\n", szMZXML);
    }
 
    return 1;
@@ -421,7 +424,7 @@ void MangoSearchManager::READ_MZXMLSCANS(char *szMZXML)
    int iScanNumber=1;
    int iMS1ScanNumber=0;
 
-   printf("\n reading %s ... ", szMZXML); fflush(stdout);
+   printf(" reading %s ... ", szMZXML); fflush(stdout);
 
    // We want to read only MS1/MS2 scans.
    vector<MSSpectrumType> msLevel;
