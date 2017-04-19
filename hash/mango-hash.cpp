@@ -489,16 +489,16 @@ void phd_add_peptide_hash_database (peptide_hash_database::phd_file &pfile,
       pepm->set_phdpmass_mass(i);
    }
 
-   cout << "Splitting peptides for protein id: ";
+// cout << "Splitting peptides for protein id: ";
    for (int i = 0; i < pfile.phdpro_size(); i++) {
-      sprintf(szTmp, "%d", i);
-      cout << szTmp;
-      cout.flush();
-      for (int ii=0; ii<strlen(szTmp);ii++)
-         cout << '\b';
+//    sprintf(szTmp, "%d", i);
+//    cout << szTmp;
+//    cout.flush();
+//    for (int ii=0; ii<strlen(szTmp);ii++)
+//       cout << '\b';
       phd_split_protein_sequence_peptides(cut_params, pfile.phdpro(i), pfile);
    }
-   cout << endl;
+// cout << endl;
 
    // If the parameter is semi-tryptic, add all left and right semi-tryptic peptides
 }
@@ -511,7 +511,7 @@ int phd_save_hash_db(peptide_hash_database::phd_file &pfile, const char *hash_fi
    // Create header which is mandatory
    hdr = pfile.phdhdr();
    */
-   cout << "Creating file" << endl;
+// cout << "Creating file" << endl;
 
    std::ofstream ofs;
    ofs.open (hash_file, ios::out | ios::trunc | ios::binary);
@@ -520,7 +520,7 @@ int phd_save_hash_db(peptide_hash_database::phd_file &pfile, const char *hash_fi
       exit(1);
    }
 
-   cout << "Wrote file" << endl;
+// cout << "Wrote file" << endl;
    ofs.close();
 }
 
@@ -562,13 +562,13 @@ int phd_create_hash_file (const char *protein_file, enzyme_cut_params params,
 {
    peptide_hash_database::phd_file pfile;
 
-   cout << "Read protein database" << endl;
+// cout << "Read protein database" << endl;
    phd_read_protein_database(protein_file, pfile);
 
-   cout << "Creating peptides based on the enzyme digestion criteria" << endl;
+// cout << "Creating peptides based on the enzyme digestion criteria" << endl;
    phd_add_peptide_hash_database(pfile, params);
 
-   cout << "Populating header parameters" << endl;
+// cout << "Populating header parameters" << endl;
    phd_populate_hdr_params(params, pfile.mutable_phdhdr());
 
    phd_save_hash_db(pfile, phd_file);
@@ -576,7 +576,7 @@ int phd_create_hash_file (const char *protein_file, enzyme_cut_params params,
 
 int phd_load_hash_file (const char *hash_file, peptide_hash_database::phd_file &pfile)
 {
-   cout << "File name is " << hash_file << endl;
+// cout << "File name is " << hash_file << endl;
    fstream input(hash_file, ios::in | ios::binary);
    if (!input) {
       cout << hash_file << ": File not found.  Creating a new file." << endl;
@@ -584,9 +584,9 @@ int phd_load_hash_file (const char *hash_file, peptide_hash_database::phd_file &
    }
 
    if (pfile.ParseFromIstream(&input)) {
-      cout << "Read the hash file: " << hash_file << endl;
+//    cout << "Read the hash file: " << hash_file << endl;
       peptide_hash_database::phd_header phdr = pfile.phdhdr();
-      phd_print_hash_file_params(phdr);
+//    phd_print_hash_file_params(phdr);
       return 0;
    } else {
       cout << "File read has problems" << endl;
@@ -600,22 +600,22 @@ int phd_compare_enzyme_cut_params_hash_file (enzyme_cut_params params,
 {
    int ret_value = 1;
 
-   cout << "Precut amino acid: " << params.precut_amino << " file " << phdr.phdhdr_precut_amino() << endl;
+// cout << "Precut amino acid: " << params.precut_amino << " file " << phdr.phdhdr_precut_amino() << endl;
    if (params.precut_amino.compare(phdr.phdhdr_precut_amino())) ret_value = 0;
 
-   cout << "Postcut amino acid: " << params.postcut_amino << " file " << phdr.phdhdr_postcut_amino() << endl;
+// cout << "Postcut amino acid: " << params.postcut_amino << " file " << phdr.phdhdr_postcut_amino() << endl;
    if (params.postcut_amino.compare(phdr.phdhdr_postcut_amino())) ret_value = 0;
 
-   cout << "Pre nocut amino acid: " << params.prenocut_amino << " file " << phdr.phdhdr_prenocut_amino() << endl;
+// cout << "Pre nocut amino acid: " << params.prenocut_amino << " file " << phdr.phdhdr_prenocut_amino() << endl;
    if (params.prenocut_amino.compare(phdr.phdhdr_prenocut_amino())) ret_value = 0;
 
-   cout << "Post nocut amino acid: " << params.postnocut_amino << " file " << phdr.phdhdr_postnocut_amino() << endl;
+// cout << "Post nocut amino acid: " << params.postnocut_amino << " file " << phdr.phdhdr_postnocut_amino() << endl;
    if (params.postnocut_amino.compare(phdr.phdhdr_postnocut_amino())) ret_value = 0;
 
-   cout << "Missed cleavage: " << params.missed_cleavage << " file " << phdr.phdhdr_missed_cleavage() << endl;
+// cout << "Missed cleavage: " << params.missed_cleavage << " file " << phdr.phdhdr_missed_cleavage() << endl;
    if ((params.missed_cleavage != phdr.phdhdr_missed_cleavage())) ret_value = 0;
 
-   cout << "Semi tryptic : " << params.semi_tryptic << " file " << phdr.phdhdr_semi_tryptic() << endl;
+// cout << "Semi tryptic : " << params.semi_tryptic << " file " << phdr.phdhdr_semi_tryptic() << endl;
    if ((params.semi_tryptic != phdr.phdhdr_semi_tryptic())) ret_value = 0;
 
    return ret_value;
@@ -627,19 +627,19 @@ inline int phd_hash_file_match_criteria (const char *protein_file,
    peptide_hash_database::phd_file pfile;
    int ret_value = 0;
 
-   cout << "File name is " << phd_file << endl;
+// cout << "File name is " << phd_file << endl;
    fstream input(phd_file, ios::in | ios::binary);
    if (!input) {
-      cout << phd_file << ": File not found.  Creating a new file." << endl;
+      cout << " " << phd_file << ": File not found.  Creating a new file." << endl;
       return 0;
    }
 
    if (pfile.ParseFromIstream(&input)) {
-      cout << "Reading the hash file and comparing the header param: " << phd_file << endl;
+//    cout << "Reading the hash file and comparing the header param: " << phd_file << endl;
       peptide_hash_database::phd_header phdr = pfile.phdhdr();
       ret_value = phd_compare_enzyme_cut_params_hash_file(params, phdr);
-      if (ret_value) cout << "Comparing returned equal parameters" << endl;
-      else cout << "Comparing returned non-equal parameters" << endl;
+//    if (ret_value)ucout << "Comparing returned equal parameters" << endl;
+//    else cout << "Comparing returned non-equal parameters" << endl;
    }
 
    input.close();
@@ -651,19 +651,19 @@ const protein_hash_db_t phd_retrieve_hash_db (const char *protein_file,
 {
    GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-   cout << "In phd_retrieve_hash_db" << endl;
+//   cout << "In phd_retrieve_hash_db" << endl;
 
    if (!phd_hash_file_match_criteria(protein_file, params, phd_file)) {
       // Check the existance of both files
       // Parse the file and compare with the enzyme cut params and the digests
       // If something doesnt match, create one and return entry
-      cout << "Creating hash file" << endl;
+//    cout << "Creating hash file" << endl;
       phd_create_hash_file(protein_file, params, phd_file);
-      cout << "Created hash database" << endl;
+//    cout << "Created hash database" << endl;
    }
 
    protein_hash_db_t ret_entry = new protein_hash_db_;
-   cout << "Loading hash database" << endl;
+// cout << "Loading hash database" << endl;
    phd_load_hash_file(phd_file, ret_entry->phd_file_entry);
 
    return ret_entry;

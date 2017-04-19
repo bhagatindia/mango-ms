@@ -21,8 +21,6 @@
 
 class MangoSearchManager;
 
-#define LYSINE_MOD                  197.032422
-
 #define PROTON_MASS                 1.00727646688
 #define C13_DIFF                    1.00335483
 
@@ -95,11 +93,15 @@ struct Options             // output parameters
    int bShowFragmentIons;
    int bPrintExpectScore;
    int bOverrideCharge;
+   int iMimicCometPepXML;
+   int iReportedScore;
+   int iSilacHeavy;
    double dMinIntensity;
    double dRemovePrecursorTol;
    double dPeptideMassLow;       // MH+ mass
    double dPeptideMassHigh;      // MH+ mass
    double dReporterMass;
+   double dLysineStumpMass;
 
    IntRange scanRange;
    DoubleRange clearMzRange;
@@ -138,6 +140,10 @@ struct Options             // output parameters
       dPeptideMassLow = a.dPeptideMassLow;
       dPeptideMassHigh = a.dPeptideMassHigh;
       dReporterMass = a.dReporterMass;
+      dLysineStumpMass = a.dLysineStumpMass;
+      iMimicCometPepXML = a.iMimicCometPepXML;
+      iReportedScore = a.iReportedScore;
+      iSilacHeavy = a.iSilacHeavy;
       strcpy(szActivationMethod, a.szActivationMethod);
 
       return *this;
@@ -216,6 +222,7 @@ typedef struct sDBEntry
 struct DBInfo
 {
    char szDatabase[SIZE_FILE];
+   char szHash[SIZE_FILE];
    char szFileName[SIZE_FILE];
    int  iTotalNumProteins;
    unsigned long int uliTotAACount;
@@ -223,6 +230,7 @@ struct DBInfo
    DBInfo& operator=(DBInfo& a)
    {
       strcpy(szDatabase, a.szDatabase);
+      strcpy(szHash, a.szHash);
       strcpy(szFileName, a.szFileName);
       iTotalNumProteins = a.iTotalNumProteins;
       uliTotAACount = a.uliTotAACount;
@@ -340,38 +348,25 @@ struct ToleranceParams
    int    iMassToleranceUnits;    // 0=ppm, 1=da (default)
    int    iMassToleranceType;     // 0=MH+ (default), 1=precursor m/z; only valid if iMassToleranceUnits > 0
    int    iIsotopeError;
-   double dInputTolerance;        // tolerance from param file
+   double dTolerancePeptide;        // tolerance from param file
+   double dToleranceRelationship;   // tolerance from param file
    double dFragmentBinSize;
    double dFragmentBinStartOffset;
-   double dMatchPeakTolerance;
 
    ToleranceParams& operator=(ToleranceParams& a)
    {
       iMassToleranceUnits = a.iMassToleranceUnits;
       iMassToleranceType = a.iMassToleranceType;
       iIsotopeError = a.iIsotopeError;
-      dInputTolerance = a.dInputTolerance;
+      dTolerancePeptide = a.dTolerancePeptide;
+      dToleranceRelationship = a.dToleranceRelationship;
       dFragmentBinSize = a.dFragmentBinSize;
       dFragmentBinStartOffset = a.dFragmentBinStartOffset;
-      dMatchPeakTolerance = a.dMatchPeakTolerance;
 
       return *this;
    }
 };
 
-struct PeaksInfo
-{
-   int iNumMatchPeaks;
-   int iNumAllowedMatchPeakErrors;
-
-   PeaksInfo& operator=(PeaksInfo& a)
-   {
-      iNumMatchPeaks = a.iNumMatchPeaks;
-      iNumAllowedMatchPeakErrors = a.iNumAllowedMatchPeakErrors;
-
-      return *this;
-   }
-};
 
 struct IonInfo
 {
@@ -421,7 +416,6 @@ struct StaticParams
    MassUtil        massUtility;
    double          dInverseBinWidth;    // this is used in BIN() many times so use inverse binWidth to do multiply vs. divide
    double          dOneMinusBinOffset;  // this is used in BIN() many times so calculate once
-   PeaksInfo       peaksInformation;
    IonInfo         ionInformation;
    int             iXcorrProcessingOffset;
    vector<double>  vectorMassOffsets;
@@ -436,8 +430,8 @@ struct StaticParams
 
       iXcorrProcessingOffset = 75;
 
-      //databaseInfo.szDatabase[0] = '\0';
-      strcpy(databaseInfo.szDatabase, "BOVIN.fasta.20160308");
+      databaseInfo.szDatabase[0] = '\0';
+      databaseInfo.szHash[0] = '\0';
 
       strcpy(szDecoyPrefix, "DECOY_");
       szOutputSuffix[0] = '\0';
@@ -456,7 +450,7 @@ struct StaticParams
          staticModifications.pdStaticMods[i] = 0.0;
       }
 
-      staticModifications.pdStaticMods[(int)'C'] = 57.021464;
+//    staticModifications.pdStaticMods[(int)'C'] = 57.021464;
 
       enzymeInformation.iAllowedMissedCleavage = 2;
 
@@ -527,9 +521,14 @@ struct StaticParams
       options.dMinIntensity = 0.0;
       options.dPeptideMassLow = 2000.0;
       options.dPeptideMassHigh = 8000.0;
-      options.dReporterMass = 751.40508;
       strcpy(options.szActivationMethod, "ALL");
       // End of mzXML specific parameters.
+
+      options.dReporterMass = 751.40508;
+      options.dLysineStumpMass = 197.032422;
+      options.iMimicCometPepXML = 0;
+      options.iReportedScore = 0;
+      options.iSilacHeavy = 0;
 
       options.clearMzRange.dStart = 0.0;
       options.clearMzRange.dEnd = 0.0;
@@ -542,10 +541,10 @@ struct StaticParams
       tolerances.iMassToleranceUnits = 2;
       tolerances.iMassToleranceType = 1;
       tolerances.iIsotopeError = 0;
-      tolerances.dInputTolerance = 20.0;                    // peptide_mass_tolerance
+      tolerances.dTolerancePeptide = 20.0;                    // peptide_mass_tolerance
+      tolerances.dToleranceRelationship = 50.0;                    // peptide_mass_tolerance
       tolerances.dFragmentBinSize = 0.02;
       tolerances.dFragmentBinStartOffset = 0.0;
-      tolerances.dMatchPeakTolerance = 0.5;
    }
 
    StaticParams& operator=(StaticParams& a)
@@ -573,7 +572,6 @@ struct StaticParams
       dInverseBinWidth = a.dInverseBinWidth;
       dOneMinusBinOffset = a.dOneMinusBinOffset;
       iXcorrProcessingOffset = a.iXcorrProcessingOffset;
-      peaksInformation = a.peaksInformation;
       ionInformation = a.ionInformation;
       return *this;
    }

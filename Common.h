@@ -42,6 +42,7 @@ using namespace std;
 #include <vector>
 #include <cfloat>
 
+#define mango_version "2017.01 rev. 0alpha"
 #define copyright "(c) University of Washington"
 
 // Redefined how the bin offset is interpreted and applied.  The valid range for the offset is

@@ -13,6 +13,8 @@ using namespace std;
 #include "math.h"
 #include <vector>
 #include <cfloat>
+#include "mango_Interfaces.h"
+#include "mango_SearchManager.h"
 
 using namespace MSToolkit;
 
@@ -56,12 +58,21 @@ struct ParamsStruct
 
 extern vector<ScanDataStruct> pvSpectrumList;
 
+void Usage(char *pszCmd);
+void ProcessCmdLine(int argc,
+                    char *argv[],
+                    char *szParamsFile,
+                    vector<InputFileInfo*> &pvInputFiles,
+                    IMangoSearchManager *pSearchMgr);
+void SetOptions(char *arg,
+                char *szParamsFile,
+                bool *bPrintParams,
+                IMangoSearchManager *pSearchMgr);
+void LoadParameters(char *pszParamsFile,
+                    IMangoSearchManager *pSearchMgr);
+void PrintParams(void);
 
-void READ_MZXMLSCANS(char *szMZXML);
-void READ_HK1(char *szHK);
-void READ_HK2(char *szHK);
-void GENERATE_HK(char *szHK);
-int WITHIN_TOLERANCE(double dMass1, double dMass2);
+
 
 
 #endif // _XLINKX_H_

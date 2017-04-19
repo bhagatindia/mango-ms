@@ -5,7 +5,7 @@ LIBS=lprotobuf
 
 mango-hash: protein_pep_hash.proto mango-hash.cpp
 	protoc --cpp_out=./ protein_pep_hash.proto	
-	g++ -g -c -std=c++11 mango-hash.cpp protein_pep_hash.pb.cc
+	g++ -O3 -c -std=c++11 mango-hash.cpp protein_pep_hash.pb.cc
 	ar rvs mango-hash.a mango-hash.o protein_pep_hash.pb.o
 
 phd-main:

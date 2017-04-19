@@ -3,10 +3,10 @@ MSTOOLKIT = mstoolkit
 HASH = hash
 PROTOBUF = protobuf
 HARDKLOR = hardklor
-override CXXFLAGS +=  -g  -std=c++11 -Wall -Wextra -static -Wno-char-subscripts -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D__LINUX__ -I$(MSTOOLKIT)/include
+override CXXFLAGS +=  -O3 -std=c++11 -Wall -Wextra -static -Wno-char-subscripts -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D__LINUX__ -I$(MSTOOLKIT)/include
 EXECNAME = mango.exe
-OBJS = mango.o mango_Preprocess.o mango_Search.o mango_MassSpecUtils.o  $(HASH)/mango-hash.o $(HASH)/protein_pep_hash.pb.o
-DEPS = mango.h Common.h mango_Data.h mango_DataInternal.h mango_Preprocess.h mango_MassSpecUtils.h
+OBJS = mango.o mango_Preprocess.o mango_Search.o mango_MassSpecUtils.o  mango_SearchManager.o mango_Interfaces.o $(HASH)/mango-hash.o $(HASH)/protein_pep_hash.pb.o
+DEPS = mango.h Common.h mango_Data.h mango_DataInternal.h mango_Preprocess.h mango_MassSpecUtils.h mango_SearchManager.h mango_Interfaces.h
 
 LIBS = -L$(MSTOOLKIT) -lmstoolkitlite -lm -pthread -L/usr/local/lib -lprotobuf 
 ifdef MSYSTEM
@@ -39,6 +39,12 @@ mango_Search.o: mango_Search.cpp Common.h mango_Search.h mango.h Common.h mango_
 mango_MassSpecUtils.o: mango_MassSpecUtils.cpp Common.h mango_MassSpecUtils.h mango.h Common.h mango_Data.h mango_DataInternal.h
 	git submodule init; git submodule update
 	${CXX} ${CXXFLAGS} mango_MassSpecUtils.cpp -c
+
+mango_SearchManager.o:  mango_SearchManager.cpp Common.h mango_Data.h mango_DataInternal.h mango_MassSpecUtils.h mango_Search.h mango_SearchManager.h mango_Interfaces.h
+	${CXX} ${CXXFLAGS} mango_SearchManager.cpp -c
+
+mango_Interfaces.o:  mango_Interfaces.cpp Common.h mango_Data.h mango_DataInternal.h mango_MassSpecUtils.h mango_Search.h mango_SearchManager.h mango_Interfaces.h
+	${CXX} ${CXXFLAGS} mango_Interfaces.cpp -c
 
 clean:
 	rm -f *.o ${EXECNAME}

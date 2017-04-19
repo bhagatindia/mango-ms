@@ -18,10 +18,10 @@
 #include "mango_Preprocess.h"
 #include "mango_DataInternal.h"
 
-std::vector<Query*>           g_pvQuery;
-std::vector<InputFileInfo *>  g_pvInputFiles;
-StaticParams                  g_staticParams;
-MassRange                     g_massRange;
+//std::vector<Query*>           g_pvQuery;
+//std::vector<InputFileInfo *>  g_pvInputFiles;
+//StaticParams                  g_staticParams;
+//MassRange                     g_massRange;
 
 
 bool mango_preprocess::_bDoneProcessingAllSpectra;
@@ -130,7 +130,7 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
    double dCushion = 0.0;
    if (g_staticParams.tolerances.iMassToleranceUnits == 0) // amu
    {
-      dCushion = g_staticParams.tolerances.dInputTolerance;
+      dCushion = g_staticParams.tolerances.dTolerancePeptide;
 
       if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
       {
@@ -139,7 +139,7 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
    }
    else if (g_staticParams.tolerances.iMassToleranceUnits == 1) // mmu
    {
-      dCushion = g_staticParams.tolerances.dInputTolerance * 0.001;
+      dCushion = g_staticParams.tolerances.dTolerancePeptide * 0.001;
 
       if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
       {
@@ -148,7 +148,7 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
    }
    else // ppm
    {
-      dCushion = g_staticParams.tolerances.dInputTolerance * g_staticParams.options.dPeptideMassHigh / 1000000.0;
+      dCushion = g_staticParams.tolerances.dTolerancePeptide * g_staticParams.options.dPeptideMassHigh / 1000000.0;
    }
 
    // initialize these temporary arrays before re-using
@@ -388,7 +388,7 @@ bool mango_preprocess::PreprocessSpectrum(Spectrum &spec,
       double dCushion = 0.0;
       if (g_staticParams.tolerances.iMassToleranceUnits == 0) // amu
       {
-         dCushion = g_staticParams.tolerances.dInputTolerance;
+         dCushion = g_staticParams.tolerances.dTolerancePeptide;
 
          if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
          {
@@ -397,7 +397,7 @@ bool mango_preprocess::PreprocessSpectrum(Spectrum &spec,
       }
       else if (g_staticParams.tolerances.iMassToleranceUnits == 1) // mmu
       {
-         dCushion = g_staticParams.tolerances.dInputTolerance * 0.001;
+         dCushion = g_staticParams.tolerances.dTolerancePeptide * 0.001;
 
          if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
          {
@@ -406,7 +406,7 @@ bool mango_preprocess::PreprocessSpectrum(Spectrum &spec,
       }
       else // ppm
       {
-         dCushion = g_staticParams.tolerances.dInputTolerance * dMass / 1000000.0;
+         dCushion = g_staticParams.tolerances.dTolerancePeptide * dMass / 1000000.0;
       }
       pScoring->_spectrumInfoInternal.iArraySize = (int)((dMass + dCushion + 2.0) * g_staticParams.dInverseBinWidth);
 
@@ -484,7 +484,7 @@ bool mango_preprocess::AdjustMassTol(struct Query *pScoring)
 {
    if (g_staticParams.tolerances.iMassToleranceUnits == 0) // amu
    {
-      pScoring->_pepMassInfo.dPeptideMassTolerance = g_staticParams.tolerances.dInputTolerance;
+      pScoring->_pepMassInfo.dPeptideMassTolerance = g_staticParams.tolerances.dTolerancePeptide;
 
       if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
       {
@@ -493,7 +493,7 @@ bool mango_preprocess::AdjustMassTol(struct Query *pScoring)
    }
    else if (g_staticParams.tolerances.iMassToleranceUnits == 1) // mmu
    {
-      pScoring->_pepMassInfo.dPeptideMassTolerance = g_staticParams.tolerances.dInputTolerance * 0.001;
+      pScoring->_pepMassInfo.dPeptideMassTolerance = g_staticParams.tolerances.dTolerancePeptide * 0.001;
 
       if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
       {
@@ -502,7 +502,7 @@ bool mango_preprocess::AdjustMassTol(struct Query *pScoring)
    }
    else // ppm
    {
-      pScoring->_pepMassInfo.dPeptideMassTolerance = g_staticParams.tolerances.dInputTolerance
+      pScoring->_pepMassInfo.dPeptideMassTolerance = g_staticParams.tolerances.dTolerancePeptide
          * pScoring->_pepMassInfo.dExpPepMass / 1000000.0;
    }
 
@@ -705,7 +705,7 @@ bool mango_preprocess::AllocateMemory(int maxNumThreads)
    double dCushion = 0.0;
    if (g_staticParams.tolerances.iMassToleranceUnits == 0) // amu
    {
-      dCushion = g_staticParams.tolerances.dInputTolerance;
+      dCushion = g_staticParams.tolerances.dTolerancePeptide;
 
       if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
       {
@@ -714,7 +714,7 @@ bool mango_preprocess::AllocateMemory(int maxNumThreads)
    }
    else if (g_staticParams.tolerances.iMassToleranceUnits == 1) // mmu
    {
-      dCushion = g_staticParams.tolerances.dInputTolerance * 0.001;
+      dCushion = g_staticParams.tolerances.dTolerancePeptide * 0.001;
 
       if (g_staticParams.tolerances.iMassToleranceType == 1)  // precursor m/z tolerance
       {
@@ -723,7 +723,7 @@ bool mango_preprocess::AllocateMemory(int maxNumThreads)
    }
    else // ppm
    {
-      dCushion = g_staticParams.tolerances.dInputTolerance * g_staticParams.options.dPeptideMassHigh / 1000000.0;
+      dCushion = g_staticParams.tolerances.dTolerancePeptide * g_staticParams.options.dPeptideMassHigh / 1000000.0;
    }
 
    //MH: Must be equal to largest possible array

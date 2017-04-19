@@ -36,8 +36,7 @@ public:
 private:
 
    static double XcorrScore(const char *szPeptide,
-                            int iScanNumber,
-                            bool bSilacHeavy);
+                            int iScanNumber);
 
    static bool CalculateEValue(int *hist_pep,
                                int iMatchPepCount,
@@ -60,7 +59,8 @@ private:
 
    static void WritePepXMLHeader(FILE *fpxml,
                                  char *szBaseName,
-                                 const char *szFastaFile);
+                                 const char *szFastaFile,
+                                 bool bMimicComet);
 
    static void WriteSpectrumQuery(FILE *fpxml,
                                   char *szBaseName,
@@ -81,6 +81,28 @@ private:
                                   int iCharge,
                                   int iIndex,
                                   int iScan);
+
+   static void WriteSplitSpectrumQuery(FILE *fpxml,
+                                       char *szBaseName,
+                                       double dExpMass1,
+                                       double dExpMass2,
+                                       double dXcorr1,
+                                       double dXcorr2,
+                                       double dExpect1,
+                                       double dExpect2,
+                                       double dCalcMass1,
+                                       double dCalcMass2,
+                                       double dXcorrCombined,
+                                       double dExpectCombined,
+                                       char *szPep1,
+                                       char *szPep2,
+                                       char *szProt1,
+                                       char *szProt2,
+                                       int iCharge1,
+                                       int iCharge2,
+                                       int iIndex,
+                                       int iScan,
+                                       int iWhichDuplicatePrecursor);
 
    // Private static methods
 
