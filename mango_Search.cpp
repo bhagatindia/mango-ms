@@ -1086,10 +1086,10 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
          szBaseName, iScan, iScan, iCharge, iScan, iScan, dExpMass1+dExpMass2+g_staticParams.options.dReporterMass, iCharge, ++iIndex);
    fprintf(fpxml, "   <search_result>\n");
    fprintf(fpxml, "    <search_hit hit_rank=\"1\" peptide=\"-\" peptide_prev_aa=\"-\" peptide_next_aa=\"-\" protein=\"-\" num_tot_proteins=\"1\" calc_neutral_pep_mass=\"%0.6f\" massdiff=\"%0.6f\" xlink_type=\"xl\">\n",
-         dCalcMass1+dCalcMass2+g_staticParams.options.dReporterMass, (dCalcMass1+dCalcMass2)-(dExpMass1+dExpMass2));
+         dCalcMass1, (dCalcMass1+dCalcMass2)-(dExpMass1+dExpMass2));
    fprintf(fpxml, "     <xlink identifier=\"BDP-NHP\" mass=\"200.00\">\n");
    fprintf(fpxml, "      <linked_peptide peptide=\"%s\" peptide_prev_aa=\"-\" peptide_next_aa=\"-\" protein=\"%s\" num_tot_proteins=\"1\" calc_neutral_pep_mass=\"%0.6f\" complement_mass=\"%0.6f\" precursor_neutral_mass=\"%0.6f\" designation=\"alpha\">\n",
-         szPep1, szProt1, dCalcMass1, dCalcMass2+g_staticParams.options.dReporterMass, dExpMass1);
+         szPep1, szProt1, dCalcMass1, dCalcMass1, dExpMass1);
    fprintf(fpxml, "       <modification_info>\n");
    for (i=0; i<(int)strlen(szPep1); i++)
       if (szPep1[i]=='K')
@@ -1103,7 +1103,7 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
 // fprintf(fpxml, "       <xlink_score name=\"xcorr\" value=\"%0.3f\"/>\n", dXcorr1);
    fprintf(fpxml, "      </linked_peptide>\n");
    fprintf(fpxml, "      <linked_peptide peptide=\"%s\" peptide_prev_aa=\"-\" peptide_next_aa=\"-\" protein=\"%s\" num_tot_proteins=\"1\" calc_neutral_pep_mass=\"%0.6f\" complement_mass=\"%0.6f\" precursor_neutral_mass=\"%0.6f\" designation=\"beta\">\n",
-         szPep2, szProt2, dCalcMass2, dCalcMass1+g_staticParams.options.dReporterMass, dExpMass2);
+         szPep2, szProt2, dCalcMass2, dCalcMass2, dExpMass2);
    fprintf(fpxml, "       <modification_info>\n");
    for (i=0; i<(int)strlen(szPep2); i++)
       if (szPep2[i]=='K')
@@ -1165,7 +1165,7 @@ void mango_Search::WriteSplitSpectrumQuery(FILE *fpxml,
          szBaseName, iWhichDuplicatePrecursor, iScan, iScan, iCharge1, iScan, iScan, dExpMass1+dExpMass2+g_staticParams.options.dReporterMass, iCharge1, ++iIndex);
    fprintf(fpxml, "   <search_result>\n");
    fprintf(fpxml, "    <search_hit hit_rank=\"1\" peptide=\"%s\" peptide_prev_aa=\"-\" peptide_next_aa=\"-\" protein=\"%s\" num_tot_proteins=\"1\" calc_neutral_pep_mass=\"%0.6f\" massdiff=\"%0.6f\">\n",
-         szPep1, szProt1, dCalcMass1+g_staticParams.options.dReporterMass, dExpMass1-dCalcMass1);
+         szPep1, szProt1, dCalcMass1, dExpMass1-dCalcMass1);
    fprintf(fpxml, "     <modification_info>\n");
    for (i=0; i<(int)strlen(szPep1); i++)
       if (szPep1[i]=='K')
@@ -1191,7 +1191,7 @@ void mango_Search::WriteSplitSpectrumQuery(FILE *fpxml,
          szBaseName, iWhichDuplicatePrecursor, iScan, iScan, iCharge2, iScan, iScan, dExpMass1+dExpMass2+g_staticParams.options.dReporterMass, iCharge2, ++iIndex);
    fprintf(fpxml, "   <search_result>\n");
    fprintf(fpxml, "    <search_hit hit_rank=\"1\" peptide=\"%s\" peptide_prev_aa=\"-\" peptide_next_aa=\"-\" protein=\"%s\" num_tot_proteins=\"1\" calc_neutral_pep_mass=\"%0.6f\" massdiff=\"%0.6f\">\n",
-         szPep2, szProt2, dCalcMass2+g_staticParams.options.dReporterMass, dExpMass2-dCalcMass2);
+         szPep2, szProt2, dCalcMass2, dExpMass2-dCalcMass2);
    fprintf(fpxml, "     <modification_info>\n");
    for (i=0; i<(int)strlen(szPep2); i++)
       if (szPep2[i]=='K')
