@@ -431,15 +431,12 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    protein_hash_db_t phdp = phd_retrieve_hash_db(protein_file, params, pep_hash_file);
 
    fprintf(fptxt, "scan\texp_mass1\texp_mass2\tpeptide1\txcorr1\tevalue1\tcalcmass1\tpeptide2\txcorr2\tevalue2\tcalcmass2\tcombinedxcorr\tcombinedevalue\n"); 
-
    FILE *fpxml;
    char szOutput[1024];
    char szBaseName[1024];
    char *combinedPep;
    char *szPeptide;
    char *szProtein;
-
-
 
    strcpy(szBaseName, szMZXML);
    if (!strcmp(szBaseName+strlen(szBaseName)-6, ".mzXML"))
@@ -597,9 +594,6 @@ exit(1);
                exit(1);
             }
 
-            fprintf(fptxt, "%d\t%f\t%f", pvSpectrumList.at(i).iScanNumber,
-                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
-                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2);
 
             double dXcorr = 0.0;
             vector<double> vdXcorr_pep1;  // store xcorr scores to be used in combined histogram
@@ -613,7 +607,6 @@ exit(1);
             dTolerance = (dPPM * pep_mass1) / 1e6;
 
             double dSilacMass = 0.0;
-
   
             // bSilac
             for (y=0; y<2; y++)
@@ -763,6 +756,10 @@ exit(1);
                      cout << "pep1_top: " << toppep1[li] << " xcorr " << xcorrPep1[li] << " expect " << dExpect << endl;
                }
             }
+
+            fprintf(fptxt, "%d\t%f\t%f", pvSpectrumList.at(i).iScanNumber,
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2);
 
             if (toppep1[0] != NULL)
                fprintf(fptxt, "\t%s\t%f\t%0.3E\t%f", toppep1[0], xcorrPep1[0], dExpect1, phdp->phd_calculate_mass_peptide(string(toppep1[0])));
