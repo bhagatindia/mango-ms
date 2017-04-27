@@ -386,7 +386,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    int i;
    int ii;
    double dTolerance;
-   double dPPM = 30.0;  // use 20ppm tolerance for now
    int hist_pep1[NUM_BINS],
        hist_pep2[NUM_BINS],
        hist_combined[NUM_BINS],
@@ -604,7 +603,7 @@ exit(1);
                cout << "After Lysine residue reduction the peptide of mass " << pep_mass1 << " are being extracted";
                cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1 << ")" << endl;
             }
-            dTolerance = (dPPM * pep_mass1) / 1e6;
+            dTolerance = (g_staticParams.tolerances.dTolerancePeptide * pep_mass1) / 1e6;
 
             double dSilacMass = 0.0;
   
@@ -668,7 +667,7 @@ exit(1);
                cout << "After Lysine residue reduction the peptide of mass " << pep_mass2 << " are being extracted";
                cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2 << ")" << endl;
             }
-            dTolerance = (dPPM * pep_mass2) / 1e6;
+            dTolerance = (g_staticParams.tolerances.dTolerancePeptide * pep_mass2) / 1e6;
 
             // bSilac
             for (y=0; y<2; y++)
