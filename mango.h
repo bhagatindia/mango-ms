@@ -65,9 +65,7 @@ void ProcessCmdLine(int argc,
                     vector<InputFileInfo*> &pvInputFiles,
                     IMangoSearchManager *pSearchMgr);
 void SetOptions(char *arg,
-                char *szParamsFile,
-                bool *bPrintParams,
-                IMangoSearchManager *pSearchMgr);
+                bool *bPrintParams);
 void LoadParameters(char *pszParamsFile,
                     IMangoSearchManager *pSearchMgr);
 void PrintParams(void);

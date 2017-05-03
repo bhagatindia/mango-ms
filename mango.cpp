@@ -86,7 +86,7 @@ void ProcessCmdLine(int argc,
    while ((iStartInputFile < argc) && (NULL != arg))
    {
       if (arg[0] == '-')
-         SetOptions(arg, szParamsFile, &bPrintParams, pSearchMgr);
+         SetOptions(arg, &bPrintParams);
 
       arg = argv[++iStartInputFile];
    }
@@ -109,7 +109,7 @@ void ProcessCmdLine(int argc,
    {
       if (arg[0] == '-')
       {
-         SetOptions(arg, szParamsFile, &bPrintParams, pSearchMgr);
+         SetOptions(arg, &bPrintParams);
       }
       else if (arg != NULL)
       {
@@ -147,13 +147,8 @@ void ProcessCmdLine(int argc,
 
 
 void SetOptions(char *arg,
-                char *szParamsFile,
-                bool *bPrintParams,
-                IMangoSearchManager *pSearchMgr)
+                bool *bPrintParams)
 {
-   char szTmp[512];
-   char szErrorMsg[512];
-
    switch (arg[1])
    {
       case 'p':

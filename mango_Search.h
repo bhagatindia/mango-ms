@@ -22,6 +22,8 @@
 
 #include "hash/mango-hash.h"
 
+#define NUMPEPTIDES 10
+
 class mango_Search
 {
 public:
@@ -34,6 +36,16 @@ public:
                                  const char *);
 
 private:
+
+   static void ScorePeptides(protein_hash_db_t phdp,
+                             double pep_mass,
+                             char *toppep[NUMPEPTIDES],
+                             char *toppro[NUMPEPTIDES],
+                             float *xcorrPep,
+                             vector<double> &vdXcorr_pep,
+                             int *hist_pep,
+                             int *num_pep,
+                             int iScanNumber);
 
    static double XcorrScore(const char *szPeptide,
                             int iScanNumber);
@@ -92,8 +104,6 @@ private:
                                        double dExpect2,
                                        double dCalcMass1,
                                        double dCalcMass2,
-                                       double dXcorrCombined,
-                                       double dExpectCombined,
                                        char *szPep1,
                                        char *szPep2,
                                        char *szProt1,

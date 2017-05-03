@@ -25,7 +25,6 @@
 mango_Search::mango_Search()
 {
 }
-#define NUMPEPTIDES 10
 
 mango_Search::~mango_Search()
 {
@@ -97,11 +96,11 @@ void mango_print_histogram(int hist_pep[])
 #define MAX_DECOY_PEP_LEN 40
 
 bool mango_Search::CalculateEValue(int *hist_pep,
-                                    int iMatchPepCount,
-                                    double *dSlope,
-                                    double *dIntercept,
-                                    double dNeutralPepMass,
-                                    int iScanNumber)
+                                   int iMatchPepCount,
+                                   double *dSlope,
+                                   double *dIntercept,
+                                   double dNeutralPepMass,
+                                   int iScanNumber)
 {
    int iMaxCorr;
    int iStartCorr;
@@ -379,13 +378,12 @@ bool mango_Search::GenerateXcorrDecoys(double dNeutralPepMass,
 
 
 void mango_Search::SearchForPeptides(char *szMZXML,
-                                      const char *protein_file,
-                                      enzyme_cut_params params,
-                                      const char *pep_hash_file)
+                                     const char *protein_file,
+                                     enzyme_cut_params params,
+                                     const char *pep_hash_file)
 {
    int i;
    int ii;
-   double dTolerance;
    int hist_pep1[NUM_BINS],
        hist_pep2[NUM_BINS],
        hist_combined[NUM_BINS],
@@ -434,8 +432,6 @@ void mango_Search::SearchForPeptides(char *szMZXML,
    char szOutput[1024];
    char szBaseName[1024];
    char *combinedPep;
-   char *szPeptide;
-   char *szProtein;
 
    strcpy(szBaseName, szMZXML);
    if (!strcmp(szBaseName+strlen(szBaseName)-6, ".mzXML"))
@@ -539,8 +535,6 @@ exit(1);
 
 //g_staticParams.options.bVerboseOutput = true;
 
-   int y=0;
-
    for (i=0; i<(int)pvSpectrumList.size(); i++)
    {
       if (1) //pvSpectrumList.at(i).iScanNumber >=18858 && pvSpectrumList.at(i).iScanNumber<=18858) // limit analysis range during dev/testing
@@ -594,7 +588,6 @@ exit(1);
             }
 
 
-            double dXcorr = 0.0;
             vector<double> vdXcorr_pep1;  // store xcorr scores to be used in combined histogram
             vector<double> vdXcorr_pep2;
 
@@ -603,123 +596,16 @@ exit(1);
                cout << "After Lysine residue reduction the peptide of mass " << pep_mass1 << " are being extracted";
                cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1 << ")" << endl;
             }
-            dTolerance = (g_staticParams.tolerances.dTolerancePeptide * pep_mass1) / 1e6;
-
-            double dSilacMass = 0.0;
   
-            // bSilac
-            for (y=0; y<2; y++)
-            {
-               if (y==0)
-                  dSilacMass = 8.014199 + 8.014199;  //...K...K
-               else
-                  dSilacMass = 6.020129 + 8.014199;  //...K...R
-
-               if (!g_staticParams.options.iSilacHeavy)
-               {
-                  y=2;   // break out of y for-loop
-                  dSilacMass = 0.0;
-               }
-
-               for (int x=0; x<3; x++)
-               {
-                  vector<peptide_hash_database::phd_peptide> *peptides1 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass1 - dSilacMass - x*1.003355, dTolerance);
-      
-                  for (peptide_hash_database::phd_peptide peptide : *peptides1)
-                  {
-                     szPeptide = new char[peptide.phdpep_sequence().length() + 1];
-                     strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
-                     szProtein = new char[peptide.phdpep_protein_list(0).phdpro_name().length() + 1];
-                     strcpy(szProtein, (peptide.phdpep_protein_list(0).phdpro_name()).c_str() );
-
-                     // sanity check to ignore peptides w/unknown AA residues
-                     // should not be needed now that this is addressed in the hash building
-                     if (strchr(szPeptide, 'B') || strchr(szPeptide, 'X') || strchr(szPeptide, 'J') || strchr(szPeptide, 'Z'))
-                        dXcorr = 0.0;
-                     else
-                     {
-      
-                        if (g_staticParams.options.iSilacHeavy)
-                        {
-                           if ((y==0 && szPeptide[strlen(szPeptide)-1]=='K') || (y==1 && szPeptide[strlen(szPeptide)-1]=='R')) // SILAC
-                              dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
-                        }
-                        else
-                           dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
-      
-                     }
-      
-                     vdXcorr_pep1.push_back(dXcorr);
-      
-                     hist_pep1[mango_get_histogram_bin_num(dXcorr)]++;
-                     insert_pep_pq(toppep1, toppro1, xcorrPep1, szPeptide, szProtein, dXcorr);
-                     num_pep1++;
-                     if (g_staticParams.options.bVerboseOutput)
-                        cout << "pep1: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
-                  }
-      
-                  (*peptides1).clear();
-               }
-            } // SILAC
+            ScorePeptides(phdp, pep_mass1, toppep1, toppro1, xcorrPep1, vdXcorr_pep1, hist_pep1, &num_pep1, pvSpectrumList.at(i).iScanNumber);
 
             if (g_staticParams.options.bVerboseOutput)
             {
                cout << "After Lysine residue reduction the peptide of mass " << pep_mass2 << " are being extracted";
                cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2 << ")" << endl;
             }
-            dTolerance = (g_staticParams.tolerances.dTolerancePeptide * pep_mass2) / 1e6;
 
-            // bSilac
-            for (y=0; y<2; y++)
-            {
-               if (y==0)
-                  dSilacMass = 8.014199 + 8.014199;  //...K...K
-               else
-                  dSilacMass = 6.020129 + 8.014199;  //...K...R
-
-               if (!g_staticParams.options.iSilacHeavy)
-               {
-                  y=2;   // break out of y for-loop
-                  dSilacMass = 0.0;
-               }
-
-               for (int x=0; x<3; x++)
-               {
-                  vector<peptide_hash_database::phd_peptide> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(pep_mass2 - dSilacMass - x*1.003355, dTolerance);
-      
-                  for (peptide_hash_database::phd_peptide peptide : *peptides2)
-                  {
-                     szPeptide = new char[peptide.phdpep_sequence().length() + 1];
-                     strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
-                     szProtein = new char[peptide.phdpep_protein_list(0).phdpro_name().length() + 1];
-                     strcpy(szProtein, (peptide.phdpep_protein_list(0).phdpro_name()).c_str() );
-
-                     // sanity check to ignore peptides w/unknown AA residues
-                     // should not be needed now that this is addressed in the hash building
-                     if (strchr(szPeptide, 'B') || strchr(szPeptide, 'X') || strchr(szPeptide, 'J') || strchr(szPeptide, 'Z'))
-                        dXcorr = 0.0;
-                     else
-                     {
-                        if (g_staticParams.options.iSilacHeavy)
-                        {
-                           if ((y==0 && szPeptide[strlen(szPeptide)-1]=='K') || (y==1 && szPeptide[strlen(szPeptide)-1]=='R')) //SILAC
-                             dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
-                        }
-                        else
-                           dXcorr = XcorrScore(szPeptide, pvSpectrumList.at(i).iScanNumber);
-                     }
-      
-                     vdXcorr_pep2.push_back(dXcorr);
-      
-                     hist_pep2[mango_get_histogram_bin_num(dXcorr)]++;
-                     insert_pep_pq(toppep2, toppro2, xcorrPep2, szPeptide, szProtein, dXcorr);
-                     num_pep2++;
-                     if (g_staticParams.options.bVerboseOutput)
-                        cout << "pep2: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
-                  }
-                  (*peptides2).clear();
-               }
-            } //SILAC
+            ScorePeptides(phdp, pep_mass2, toppep2, toppro2, xcorrPep2, vdXcorr_pep2, hist_pep2, &num_pep2, pvSpectrumList.at(i).iScanNumber);
 
             if (toppep1[0] == NULL || toppep2[0] == NULL)
                continue;
@@ -869,7 +755,6 @@ exit(1);
                      xcorrPep1[0], xcorrPep2[0],
                      dExpect1, dExpect2,
                      phdp->phd_calculate_mass_peptide(string(toppep1[0])), phdp->phd_calculate_mass_peptide(string(toppep2[0])),
-                     xcorrCombined[0], dExpectCombined,
                      toppep1[0], toppep2[0],
                      toppro1[0], toppro2[0],
                      pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1,
@@ -920,6 +805,81 @@ exit(1);
 
    fclose(fptxt);
    fclose(fpxml);
+}
+
+
+void mango_Search::ScorePeptides(protein_hash_db_t phdp,
+                                 double pep_mass,
+                                 char *toppep[NUMPEPTIDES],
+                                 char *toppro[NUMPEPTIDES],
+                                 float *xcorrPep,
+                                 vector<double> &vdXcorr_pep,
+                                 int *hist_pep,
+                                 int *num_pep,
+                                 int iScanNumber)
+{
+   int y;
+   double dXcorr = 0.0;
+   double dTolerance = (g_staticParams.tolerances.dTolerancePeptide * (pep_mass)) / 1e6;
+   double dSilacMass = 0.0;
+   char *szPeptide;
+   char *szProtein;
+
+   // bSilac
+   for (y=0; y<2; y++)
+   {
+      if (y==0)
+         dSilacMass = 8.014199 + 8.014199;  //...K...K
+      else
+         dSilacMass = 6.020129 + 8.014199;  //...K...R
+
+      if (!g_staticParams.options.iSilacHeavy)
+      {
+         y=2;   // break out of y for-loop
+         dSilacMass = 0.0;
+      }
+
+      for (int x=0; x<3; x++)
+      {
+         vector<peptide_hash_database::phd_peptide> *peptides = phdp->phd_get_peptides_ofmass_tolerance(pep_mass - dSilacMass - x*1.003355, dTolerance);
+         
+         for (peptide_hash_database::phd_peptide peptide : *peptides)
+         {
+            szPeptide = new char[peptide.phdpep_sequence().length() + 1];
+            strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
+            szProtein = new char[peptide.phdpep_protein_list(0).phdpro_name().length() + 1];
+            strcpy(szProtein, (peptide.phdpep_protein_list(0).phdpro_name()).c_str() );
+
+            // sanity check to ignore peptides w/unknown AA residues
+            // should not be needed now that this is addressed in the hash building
+            if (strchr(szPeptide, 'B') || strchr(szPeptide, 'X') || strchr(szPeptide, 'J') || strchr(szPeptide, 'Z'))
+               dXcorr = 0.0;
+            else
+            {
+         
+               if (g_staticParams.options.iSilacHeavy)
+               {
+                  if ((y==0 && szPeptide[strlen(szPeptide)-1]=='K') || (y==1 && szPeptide[strlen(szPeptide)-1]=='R')) // SILAC
+                     dXcorr = XcorrScore(szPeptide, iScanNumber);
+               }
+               else
+                  dXcorr = XcorrScore(szPeptide, iScanNumber);
+         
+            }
+         
+            vdXcorr_pep.push_back(dXcorr);
+         
+            hist_pep[mango_get_histogram_bin_num(dXcorr)]++;
+            insert_pep_pq(toppep, toppro, xcorrPep, szPeptide, szProtein, dXcorr);
+            (*num_pep)++;
+            if (g_staticParams.options.bVerboseOutput)
+               cout << "pep: " << szPeptide << "  xcorr " << dXcorr << "  protein " << szProtein << endl;
+         }
+         
+         (*peptides).clear();
+
+      }
+   }
 }
 
 
@@ -1096,7 +1056,7 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
          fprintf(fpxml, "        <mod_aminoacid_mass position=\"%d\" mass=\"160.03064805\"/>\n", i+1);
    fprintf(fpxml, "       </modification_info>\n");
    fprintf(fpxml, "       <xlink_score name=\"score\" value=\"%0.3E\"/>\n", dExpect1);
-// fprintf(fpxml, "       <xlink_score name=\"xcorr\" value=\"%0.3f\"/>\n", dXcorr1);
+   fprintf(fpxml, "       <xlink_score name=\"xcorr\" value=\"%0.3f\"/>\n", dXcorr1);
    fprintf(fpxml, "      </linked_peptide>\n");
    fprintf(fpxml, "      <linked_peptide peptide=\"%s\" peptide_prev_aa=\"-\" peptide_next_aa=\"-\" protein=\"%s\" num_tot_proteins=\"1\" calc_neutral_pep_mass=\"%0.6f\" complement_mass=\"%0.6f\" precursor_neutral_mass=\"%0.6f\" designation=\"beta\">\n",
          szPep2, szProt2, dCalcMass2, dCalcMass2, dExpMass2);
@@ -1110,7 +1070,7 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
          fprintf(fpxml, "        <mod_aminoacid_mass position=\"%d\" mass=\"160.03046805\"/>\n", i+1);
    fprintf(fpxml, "       </modification_info>\n");
    fprintf(fpxml, "       <xlink_score name=\"score\" value=\"%0.3E\"/>\n", dExpect2);
-// fprintf(fpxml, "       <xlink_score name=\"delta_score\" value=\"%0.3f\"/>\n", dXcorr2);
+   fprintf(fpxml, "       <xlink_score name=\"delta_score\" value=\"%0.3f\"/>\n", dXcorr2);
    fprintf(fpxml, "      </linked_peptide>\n");
    fprintf(fpxml, "     </xlink>\n");
 
@@ -1121,6 +1081,7 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
    fprintf(fpxml, "     <search_score name=\"kojak_score\" value=\"%0.3E\"/>\n", dScore);
    fprintf(fpxml, "     <search_score name=\"delta_score\" value=\"%0.3f\"/>\n", dExpectCombined); //dXcorrCombined);
    fprintf(fpxml, "     <search_score name=\"ppm_error\" value=\"0.0\"/>\n");
+   fprintf(fpxml, "     <search_score name=\"xcorr_combined\" value=\"%0.3f\"/>\n", dXcorrCombined);
    fprintf(fpxml, "    </search_hit>\n");
    fprintf(fpxml, "   </search_result>\n");
    fprintf(fpxml, "  </spectrum_query>\n");
@@ -1138,8 +1099,6 @@ void mango_Search::WriteSplitSpectrumQuery(FILE *fpxml,
                                            double dExpect2,
                                            double dCalcMass1,
                                            double dCalcMass2,
-                                           double dXcorrCombined,
-                                           double dExpectCombined,
                                            char *szPep1,
                                            char *szPep2,
                                            char *szProt1,

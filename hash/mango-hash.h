@@ -20,6 +20,7 @@ struct protein_hash_db_ {
 
 typedef protein_hash_db_* protein_hash_db_t;
 
-const protein_hash_db_t phd_retrieve_hash_db (const char *protein_file, 
-                              enzyme_cut_params params, const char *phd_file);
+protein_hash_db_t phd_retrieve_hash_db (const char *protein_file,
+                                        enzyme_cut_params params,
+                                        const char *phd_file);
 
