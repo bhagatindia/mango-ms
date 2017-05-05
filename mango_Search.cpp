@@ -612,7 +612,7 @@ exit(1);
 
             double dSlope;
             double dIntercept;
-            double dExpect;
+//          double dExpect;
 
             // return dSlope and dIntercept for histogram
             CalculateEValue(hist_pep1, num_pep1, &dSlope, &dIntercept,
@@ -625,6 +625,14 @@ exit(1);
             }
 
             double dExpect1 = 999;;
+            if (toppep1[0] != NULL)
+            {
+               if (dSlope > 0)
+                  dExpect1 = 999;
+               else
+                  dExpect1 = pow(10.0, dSlope * xcorrPep1[0] + dIntercept);
+            }
+/*
             for (int li = 0 ; li < NUMPEPTIDES; li++)
             {
                if (toppep1[li] != NULL)
@@ -641,6 +649,7 @@ exit(1);
                      cout << "pep1_top: " << toppep1[li] << " xcorr " << xcorrPep1[li] << " expect " << dExpect << endl;
                }
             }
+*/
 
             fprintf(fptxt, "%d\t%f\t%f", pvSpectrumList.at(i).iScanNumber,
                   pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
@@ -659,7 +668,16 @@ exit(1);
                mango_print_histogram(hist_pep2);
                cout << "Top "<< NUMPEPTIDES << " pep2 peptides for this scan are " << endl;
             }
+
             double dExpect2 = 999;
+            if (toppep2[0] != NULL)
+            {
+               if (dSlope > 0)
+                  dExpect2 = 999;
+               else
+                  dExpect2 = pow(10.0, dSlope * xcorrPep2[0] + dIntercept);
+            }
+/*
             for (int li = 0; li < NUMPEPTIDES; li++)
             {
                if (toppep2[li] != NULL)
@@ -676,6 +694,7 @@ exit(1);
                      cout << "pep2_top: " << toppep2[li] << " xcorr " << xcorrPep2[li] << " expect " << dExpect << endl;
                }
             }
+*/
 
             if (toppep2[0] != NULL)
                fprintf(fptxt, "\t%s\t%f\t%0.3E\t%f", toppep2[0], xcorrPep2[0], dExpect2, phdp->phd_calculate_mass_peptide(string(toppep2[0])));
@@ -724,6 +743,15 @@ exit(1);
             }
 
             double dExpectCombined = 999;
+            if (toppepcombined[0] != NULL)
+            {
+               if (dSlope > 0)
+                  dExpectCombined = 999;
+               else
+                  dExpectCombined = pow(10.0, dSlope * xcorrCombined[0] + dIntercept);
+            }
+
+/*
             for (int li = 0; li < NUMPEPTIDES; li++)
             {
                if (toppepcombined[li] != NULL)
@@ -743,16 +771,27 @@ exit(1);
                   }
                }
             }
+*/
 
             int iCharge = (pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1>pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2
                   ? pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1
                   : pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2);
+
+            double dDeltaCn1, dDeltaCn2;
+
+            dDeltaCn1 = dDeltaCn2 = 0.0;
+
+            if (xcorrPep1[1] >= 0.0 && xcorrPep1[0] > 0.0)
+               dDeltaCn1 = (xcorrPep1[0] - xcorrPep1[1])/xcorrPep1[0];
+            if (xcorrPep2[1] >= 0.0 && xcorrPep2[0] > 0.0)
+               dDeltaCn2 = (xcorrPep2[0] - xcorrPep2[1])/xcorrPep2[0];
 
             if (g_staticParams.options.iMimicCometPepXML)
             {
                WriteSplitSpectrumQuery(fpxml, szBaseName,
                      pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
                      xcorrPep1[0], xcorrPep2[0],
+                     dDeltaCn1, dDeltaCn2,
                      dExpect1, dExpect2,
                      phdp->phd_calculate_mass_peptide(string(toppep1[0])), phdp->phd_calculate_mass_peptide(string(toppep2[0])),
                      toppep1[0], toppep2[0],
@@ -767,6 +806,7 @@ exit(1);
                WriteSpectrumQuery(fpxml, szBaseName,
                      pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
                      xcorrPep1[0], xcorrPep2[0],
+                     dDeltaCn1, dDeltaCn2,
                      dExpect1, dExpect2,
                      phdp->phd_calculate_mass_peptide(string(toppep1[0])), phdp->phd_calculate_mass_peptide(string(toppep2[0])),
                      xcorrCombined[0], dExpectCombined,
@@ -993,7 +1033,7 @@ void mango_Search::WritePepXMLHeader(FILE *fpxml,
 
    if (bMimicComet)
    {
-      fprintf(fpxml, "  <search_summary base_name=\"%s/%s\" search_engine=\"Comet\" search_engine_version=\"1.0.0\" precursor_mass_type=\"monoisotopic\" fragment_mass_type=\"monoisotopic\" search_id=\"1\">\n", szCWD, szBaseName);
+      fprintf(fpxml, "  <search_summary base_name=\"%s/%s\" search_engine=\"Mango\" search_engine_version=\"1.0.0\" precursor_mass_type=\"monoisotopic\" fragment_mass_type=\"monoisotopic\" search_id=\"1\">\n", szCWD, szBaseName);
    }
    else
    {
@@ -1018,6 +1058,8 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
                                        double dExpMass2,
                                        double dXcorr1,
                                        double dXcorr2,
+                                       double dDeltaCn1,
+                                       double dDeltaCn2,
                                        double dExpect1,
                                        double dExpect2,
                                        double dCalcMass1,
@@ -1057,6 +1099,7 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
    fprintf(fpxml, "       </modification_info>\n");
    fprintf(fpxml, "       <xlink_score name=\"score\" value=\"%0.3E\"/>\n", dExpect1);
    fprintf(fpxml, "       <xlink_score name=\"xcorr\" value=\"%0.3f\"/>\n", dXcorr1);
+   fprintf(fpxml, "       <xlink_score name=\"deltacn\" value=\"%0.3f\"/>\n", dDeltaCn1);
    fprintf(fpxml, "      </linked_peptide>\n");
    fprintf(fpxml, "      <linked_peptide peptide=\"%s\" peptide_prev_aa=\"-\" peptide_next_aa=\"-\" protein=\"%s\" num_tot_proteins=\"1\" calc_neutral_pep_mass=\"%0.6f\" complement_mass=\"%0.6f\" precursor_neutral_mass=\"%0.6f\" designation=\"beta\">\n",
          szPep2, szProt2, dCalcMass2, dCalcMass2, dExpMass2);
@@ -1071,6 +1114,7 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
    fprintf(fpxml, "       </modification_info>\n");
    fprintf(fpxml, "       <xlink_score name=\"score\" value=\"%0.3E\"/>\n", dExpect2);
    fprintf(fpxml, "       <xlink_score name=\"delta_score\" value=\"%0.3f\"/>\n", dXcorr2);
+   fprintf(fpxml, "       <xlink_score name=\"deltacn\" value=\"%0.3f\"/>\n", dDeltaCn2);
    fprintf(fpxml, "      </linked_peptide>\n");
    fprintf(fpxml, "     </xlink>\n");
 
@@ -1079,7 +1123,7 @@ void mango_Search::WriteSpectrumQuery(FILE *fpxml,
       dScore = dExpectCombined;
 
    fprintf(fpxml, "     <search_score name=\"kojak_score\" value=\"%0.3E\"/>\n", dScore);
-   fprintf(fpxml, "     <search_score name=\"delta_score\" value=\"%0.3f\"/>\n", dExpectCombined); //dXcorrCombined);
+   fprintf(fpxml, "     <search_score name=\"delta_score\" value=\"0.0\"/>\n"); //dXcorrCombined);
    fprintf(fpxml, "     <search_score name=\"ppm_error\" value=\"0.0\"/>\n");
    fprintf(fpxml, "     <search_score name=\"xcorr_combined\" value=\"%0.3f\"/>\n", dXcorrCombined);
    fprintf(fpxml, "    </search_hit>\n");
@@ -1095,6 +1139,8 @@ void mango_Search::WriteSplitSpectrumQuery(FILE *fpxml,
                                            double dExpMass2,
                                            double dXcorr1,
                                            double dXcorr2,
+                                           double dDeltaCn1,
+                                           double dDeltaCn2,
                                            double dExpect1,
                                            double dExpect2,
                                            double dCalcMass1,
@@ -1131,7 +1177,7 @@ void mango_Search::WriteSplitSpectrumQuery(FILE *fpxml,
          fprintf(fpxml, "      <mod_aminoacid_mass position=\"%d\" mass=\"160.03064805\"/>\n", i+1);
    fprintf(fpxml, "     </modification_info>\n");
    fprintf(fpxml, "     <search_score name=\"xcorr\" value=\"%0.3f\"/>\n", dXcorr1);
-   fprintf(fpxml, "     <search_score name=\"deltacn\" value=\"0.0\"/>\n");
+   fprintf(fpxml, "     <search_score name=\"deltacn\" value=\"%0.3f\"/>\n", dDeltaCn1);
    fprintf(fpxml, "     <search_score name=\"deltacnstar\" value=\"0.0\"/>\n");
    fprintf(fpxml, "     <search_score name=\"spscore\" value=\"1.0\"/>\n");
    fprintf(fpxml, "     <search_score name=\"sprank\" value=\"1\"/>\n");
@@ -1157,7 +1203,7 @@ void mango_Search::WriteSplitSpectrumQuery(FILE *fpxml,
          fprintf(fpxml, "      <mod_aminoacid_mass position=\"%d\" mass=\"160.03064805\"/>\n", i+1);
    fprintf(fpxml, "     </modification_info>\n");
    fprintf(fpxml, "     <search_score name=\"xcorr\" value=\"%0.3f\"/>\n", dXcorr2);
-   fprintf(fpxml, "     <search_score name=\"deltacn\" value=\"0.0\"/>\n");
+   fprintf(fpxml, "     <search_score name=\"deltacn\" value=\"%0.3f\"/>\n", dDeltaCn2);
    fprintf(fpxml, "     <search_score name=\"deltacnstar\" value=\"0.0\"/>\n");
    fprintf(fpxml, "     <search_score name=\"spscore\" value=\"1.0\"/>\n");
    fprintf(fpxml, "     <search_score name=\"sprank\" value=\"1\"/>\n");
