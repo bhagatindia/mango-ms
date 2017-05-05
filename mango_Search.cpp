@@ -749,6 +749,8 @@ exit(1);
                   dExpectCombined = 999;
                else
                   dExpectCombined = pow(10.0, dSlope * xcorrCombined[0] + dIntercept);
+
+               fprintf(fptxt, "\t%f\t%0.3E\n",  xcorrCombined[0], dExpectCombined);
             }
 
 /*
