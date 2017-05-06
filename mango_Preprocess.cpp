@@ -46,19 +46,11 @@ void mango_preprocess::Reset()
     _bDoneProcessingAllSpectra = false;
 }
 
-void mango_preprocess::LoadAndPreprocessSpectra(MSReader &mstReader,
-                                                 int iScanNumber,
-                                                 double dMZ1,
-                                                 double dMZ2)
+void mango_preprocess::LoadAndPreprocessSpectra(Spectrum *mstSpectrum)
 {
-   Spectrum mstSpectrum;           // For holding spectrum.
-
    g_massRange.iMaxFragmentCharge = 0;
 
-   // Loads in MSMS spectrum data.
-   mstReader.readFile(NULL, mstSpectrum, iScanNumber);
-
-   if (mstSpectrum.getScanNumber() != 0)   // should not be needed by quick sanity check to make sure scan is read
+   if (mstSpectrum->getScanNumber() != 0)   // should not be needed by quick sanity check to make sure scan is read
    {
       int iNumClearedPeaks = 0;
 
@@ -71,13 +63,13 @@ void mango_preprocess::LoadAndPreprocessSpectra(MSReader &mstReader,
 
          while (true)
          {
-            if (i >= mstSpectrum.size() || mstSpectrum.at(i).mz > g_staticParams.options.clearMzRange.dEnd)
+            if (i >= mstSpectrum->size() || mstSpectrum->at(i).mz > g_staticParams.options.clearMzRange.dEnd)
                break;
 
-            if (mstSpectrum.at(i).mz >= g_staticParams.options.clearMzRange.dStart
-                  && mstSpectrum.at(i).mz <= g_staticParams.options.clearMzRange.dEnd)
+            if (mstSpectrum->at(i).mz >= g_staticParams.options.clearMzRange.dStart
+                  && mstSpectrum->at(i).mz <= g_staticParams.options.clearMzRange.dEnd)
             {
-               mstSpectrum.at(i).intensity = 0.0;
+               mstSpectrum->at(i).intensity = 0.0;
                iNumClearedPeaks++;
             }
 
@@ -85,15 +77,13 @@ void mango_preprocess::LoadAndPreprocessSpectra(MSReader &mstReader,
          }
       }
 
-      if (mstSpectrum.size()-iNumClearedPeaks >= g_staticParams.options.iMinPeaks)
+      if (mstSpectrum->size()-iNumClearedPeaks >= g_staticParams.options.iMinPeaks)
       {
-         if (CheckActivationMethodFilter(mstSpectrum.getActivationMethod()))
+         if (CheckActivationMethodFilter(mstSpectrum->getActivationMethod()))
          {
             int i=0;
 
-            PreprocessSpectrum(mstSpectrum,
-                  dMZ1,
-                  dMZ2,
+            PreprocessSpectrum(*mstSpectrum,
                   ppdTmpRawDataArr[i],
                   ppdTmpFastXcorrDataArr[i],
                   ppdTmpCorrelationDataArr[i]);
@@ -110,12 +100,10 @@ bool mango_preprocess::DoneProcessingAllSpectra()
 
 
 bool mango_preprocess::Preprocess(struct Query *pScoring,
-                                   Spectrum mstSpectrum,
-                                   double dMZ1,                // exclude these intact precursors peaks
-                                   double dMZ2,
-                                   double *pdTmpRawData,
-                                   double *pdTmpFastXcorrData,
-                                   double *pdTmpCorrelationData)
+                                  Spectrum mstSpectrum,
+                                  double *pdTmpRawData,
+                                  double *pdTmpFastXcorrData,
+                                  double *pdTmpCorrelationData)
 {
    int i;
    int x;
@@ -159,7 +147,7 @@ bool mango_preprocess::Preprocess(struct Query *pScoring,
    memset(pdTmpCorrelationData, 0, iTmp);
 
    // pdTmpRawData is a binned array holding raw data
-   if (!LoadIons(pScoring, pdTmpRawData, mstSpectrum, &pPre, dMZ1, dMZ2))
+   if (!LoadIons(pScoring, pdTmpRawData, mstSpectrum, &pPre))
    {
       return false;
    }
@@ -344,8 +332,6 @@ bool mango_preprocess::CheckExit(int iAnalysisType,
 
 
 bool mango_preprocess::PreprocessSpectrum(Spectrum &spec,
-                                         double dMZ1,
-                                         double dMZ2,
                                          double *pdTmpRawData,
                                          double *pdTmpFastXcorrData,
                                          double *pdTmpCorrelationData)
@@ -424,7 +410,7 @@ bool mango_preprocess::PreprocessSpectrum(Spectrum &spec,
       // Populate pdCorrelation data.
       // NOTE: there must be a good way of doing this just once per spectrum instead
       //       of repeating for each charge state.
-      if (!Preprocess(pScoring, spec, dMZ1, dMZ2, pdTmpRawData, pdTmpFastXcorrData, pdTmpCorrelationData))
+      if (!Preprocess(pScoring, spec, pdTmpRawData, pdTmpFastXcorrData, pdTmpCorrelationData))
       {
          return false;
       }
@@ -580,9 +566,7 @@ bool mango_preprocess::AdjustMassTol(struct Query *pScoring)
 bool mango_preprocess::LoadIons(struct Query *pScoring,
                                double *pdTmpRawData,
                                Spectrum mstSpectrum,
-                               struct PreprocessStruct *pPre,
-                               double dMZ1,
-                               double dMZ2)
+                               struct PreprocessStruct *pPre)
 {
    int  i;
    double dIon,
@@ -614,9 +598,7 @@ bool mango_preprocess::LoadIons(struct Query *pScoring,
 
             if ((iBinIon < pScoring->_spectrumInfoInternal.iArraySize) && (dIntensity > pdTmpRawData[iBinIon]))
             {
-               if (     !(dIon > dMZ1-0.1 && dIon < dMZ1+1.1)    // if ion is not within range of either released precursors
-                     && !(dIon > dMZ2-0.1 && dIon < dMZ2+1.1)
-                     && !(dIon > 310.16-0.1 && dIon < 310.16+0.1)        // clear out contaminant peaks
+               if (     !(dIon > 310.16-0.1 && dIon < 310.16+0.1)        // clear out contaminant peaks
                      && !(dIon > 311.16-0.1 && dIon < 311.16+0.1)
                      && !(dIon > 430.21-0.1 && dIon < 430.21+0.1)
                      && !(dIon > 431.22-0.1 && dIon < 431.22+0.1)

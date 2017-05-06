@@ -487,357 +487,320 @@ void mango_Search::SearchForPeptides(char *szMZXML,
       fflush(stdout);
    }
 
-/*
-   int iHistoSize[20];
-   int iNonEmptyScan = 0;
-   int iEmptyScan = 0;
-   for (int x=0; x<=11; x++)
-      iHistoSize[x]=0;
-   for (i=0; i<(int)pvSpectrumList.size(); i++)
-   {
-      int x = (int)pvSpectrumList.at(i).pvdPrecursors.size();
-
-      if (x>=20)
-         x=11;
-      else if (x>=10)
-         x=10;
-
-      iHistoSize[x] += 1;
-      
-      if (x>0)
-         iNonEmptyScan++;
-      else
-         iEmptyScan++;
-   }
-   printf("\n");
-   for (int x=0; x<=11; x++)
-      printf("%d  %d\n", x, iHistoSize[x]);
-   printf("iNonEmptyScans = %d\n", iNonEmptyScan);
-   printf("iEmptyScans = %d\n", iEmptyScan);
-   exit(1);
-*/
-
-
-/*
-vector<peptide_hash_database::phd_peptide> *peptides2 = phdp->phd_get_peptides_ofmass_tolerance(2500.0, 2499.0);
-for (peptide_hash_database::phd_peptide peptide : *peptides2)
-{
-  szPeptide = new char[peptide.phdpep_sequence().length() + 1];
-  strcpy(szPeptide, (peptide.phdpep_sequence()).c_str() );
-  printf("peptide: %s\n", szPeptide);
-
-  if ( (strchr(szPeptide, ' ')))
-     getchar();
-}
-exit(1);
-*/
-
-
-//g_staticParams.options.bVerboseOutput = true;
+// g_staticParams.options.bVerboseOutput = true;
 
    for (i=0; i<(int)pvSpectrumList.size(); i++)
    {
-      if (1) //pvSpectrumList.at(i).iScanNumber >=18858 && pvSpectrumList.at(i).iScanNumber<=18858) // limit analysis range during dev/testing
+
+// if (1) //pvSpectrumList.at(i).iScanNumber >=18858 && pvSpectrumList.at(i).iScanNumber<=18858) // limit analysis range during dev/testing
+// {
+
+      Spectrum mstSpectrum;           // For holding spectrum.
+
+      // Loads in MSMS spectrum data.
+      mstReader.readFile(NULL, mstSpectrum, pvSpectrumList.at(i).iScanNumber);
+
+      // should be able to thread here; passing mstSpectrum to each thread.
+
+      mango_preprocess::LoadAndPreprocessSpectra(&mstSpectrum);
+
+      for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
       {
-         mango_preprocess::LoadAndPreprocessSpectra(mstReader, pvSpectrumList.at(i).iScanNumber, 0, 0);
+         for (int j = 0; j < NUM_BINS; j++)
+            hist_pep1[j] = hist_pep2[j] = hist_combined[j] = 0;
 
-         for (ii=0; ii<(int)pvSpectrumList.at(i).pvdPrecursors.size(); ii++)
+         num_pep1 = num_pep2 = num_pep_combined = 0;
+
+         double dMZ1 =  (pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1
+               + pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1 * PROTON_MASS)/ pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1;
+         double dMZ2 =  (pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2
+               + pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2 * PROTON_MASS)/ pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2;
+
+         for (int li = 0; li < NUMPEPTIDES; li++)
          {
-            for (int j = 0; j < NUM_BINS; j++)
-               hist_pep1[j] = hist_pep2[j] = hist_combined[j] = 0;
+            xcorrPep1[li] = xcorrPep2[li] = xcorrCombined[li] = -99999;
+            toppep1[li] = toppep2[li] = toppepcombined[li] = NULL;
+         }
 
-            num_pep1 = num_pep2 = num_pep_combined = 0;
-
-            double dMZ1 =  (pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1
-                  + pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1 * PROTON_MASS)/ pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1;
-            double dMZ2 =  (pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2
-                  + pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2 * PROTON_MASS)/ pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2;
-
-            for (int li = 0; li < NUMPEPTIDES; li++)
-            {
-               xcorrPep1[li] = xcorrPep2[li] = xcorrCombined[li] = -99999;
-               toppep1[li] = toppep2[li] = toppepcombined[li] = NULL;
-            }
-
-            if (g_staticParams.options.bVerboseOutput)
-            {
-               printf("Scan %d (i=%d), retrieving peptides of mass %0.4f (%d+ %0.4f) and %0.4f (%d+ %0.4f)\n",
-                     pvSpectrumList.at(i).iScanNumber,
-                     i,
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1,
-                     dMZ1,
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2,
-                     dMZ2);
-            }
-
-            double pep_mass1 = pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1 - g_staticParams.options.dLysineStumpMass - g_staticParams.precalcMasses.dOH2;
-            double pep_mass2 = pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2 - g_staticParams.options.dLysineStumpMass - g_staticParams.precalcMasses.dOH2;
-
-            if (pep_mass1 <= 0)
-            {
-               cout << "Peptide mass1 is coming out to be zero after removing Lysine residue" << endl;
-               exit(1);
-            }
-
-            if (pep_mass2 <= 0)
-            {
-               cout << "Peptide mass2 is coming out to be zero after removing Lysine residue" << endl;
-               exit(1);
-            }
-
-
-            vector<double> vdXcorr_pep1;  // store xcorr scores to be used in combined histogram
-            vector<double> vdXcorr_pep2;
-
-            if (g_staticParams.options.bVerboseOutput)
-            {
-               cout << "After Lysine residue reduction the peptide of mass " << pep_mass1 << " are being extracted";
-               cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1 << ")" << endl;
-            }
-  
-            ScorePeptides(phdp, pep_mass1, toppep1, toppro1, xcorrPep1, vdXcorr_pep1, hist_pep1, &num_pep1, pvSpectrumList.at(i).iScanNumber);
-
-            if (g_staticParams.options.bVerboseOutput)
-            {
-               cout << "After Lysine residue reduction the peptide of mass " << pep_mass2 << " are being extracted";
-               cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2 << ")" << endl;
-            }
-
-            ScorePeptides(phdp, pep_mass2, toppep2, toppro2, xcorrPep2, vdXcorr_pep2, hist_pep2, &num_pep2, pvSpectrumList.at(i).iScanNumber);
-
-            if (toppep1[0] == NULL || toppep2[0] == NULL)
-               continue;
-
-            double dSlope;
-            double dIntercept;
-//          double dExpect;
-
-            // return dSlope and dIntercept for histogram
-            CalculateEValue(hist_pep1, num_pep1, &dSlope, &dIntercept,
-                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).iScanNumber);
-
-            if (g_staticParams.options.bVerboseOutput)
-            {
-               mango_print_histogram(hist_pep1);
-               cout << "Top "<< NUMPEPTIDES << " pep1 peptides for this scan are " << endl;
-            }
-
-            double dExpect1 = 999;;
-            if (toppep1[0] != NULL)
-            {
-               if (dSlope > 0)
-                  dExpect1 = 999;
-               else
-                  dExpect1 = pow(10.0, dSlope * xcorrPep1[0] + dIntercept);
-            }
-/*
-            for (int li = 0 ; li < NUMPEPTIDES; li++)
-            {
-               if (toppep1[li] != NULL)
-               {
-                  if (dSlope > 0)
-                     dExpect = 999;
-                  else
-                     dExpect = pow(10.0, dSlope * xcorrPep1[li] + dIntercept);
-
-                  if (li == 0)
-                     dExpect1 = dExpect;
-
-                  if (g_staticParams.options.bVerboseOutput)
-                     cout << "pep1_top: " << toppep1[li] << " xcorr " << xcorrPep1[li] << " expect " << dExpect << endl;
-               }
-            }
-*/
-
-            fprintf(fptxt, "%d\t%f\t%f", pvSpectrumList.at(i).iScanNumber,
+         if (g_staticParams.options.bVerboseOutput)
+         {
+            printf("Scan %d (i=%d), retrieving peptides of mass %0.4f (%d+ %0.4f) and %0.4f (%d+ %0.4f)\n",
+                  pvSpectrumList.at(i).iScanNumber,
+                  i,
                   pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
-                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2);
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1,
+                  dMZ1,
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2,
+                  dMZ2);
+         }
 
-            if (toppep1[0] != NULL)
-               fprintf(fptxt, "\t%s\t%f\t%0.3E\t%f", toppep1[0], xcorrPep1[0], dExpect1, phdp->phd_calculate_mass_peptide(string(toppep1[0])));
+         double pep_mass1 = pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1 - g_staticParams.options.dLysineStumpMass - g_staticParams.precalcMasses.dOH2;
+         double pep_mass2 = pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2 - g_staticParams.options.dLysineStumpMass - g_staticParams.precalcMasses.dOH2;
+
+         if (pep_mass1 <= 0)
+         {
+            cout << "Peptide mass1 is coming out to be zero after removing Lysine residue" << endl;
+            exit(1);
+         }
+
+         if (pep_mass2 <= 0)
+         {
+            cout << "Peptide mass2 is coming out to be zero after removing Lysine residue" << endl;
+            exit(1);
+         }
+
+         vector<double> vdXcorr_pep1;  // store xcorr scores to be used in combined histogram
+         vector<double> vdXcorr_pep2;
+
+         if (g_staticParams.options.bVerboseOutput)
+         {
+            cout << "After Lysine residue reduction the peptide of mass " << pep_mass1 << " are being extracted";
+            cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1 << ")" << endl;
+         }
+  
+         ScorePeptides(phdp, pep_mass1, toppep1, toppro1, xcorrPep1, vdXcorr_pep1, hist_pep1, &num_pep1, pvSpectrumList.at(i).iScanNumber);
+
+         if (g_staticParams.options.bVerboseOutput)
+         {
+            cout << "After Lysine residue reduction the peptide of mass " << pep_mass2 << " are being extracted";
+            cout << " (" << pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2 << ")" << endl;
+         }
+
+         ScorePeptides(phdp, pep_mass2, toppep2, toppro2, xcorrPep2, vdXcorr_pep2, hist_pep2, &num_pep2, pvSpectrumList.at(i).iScanNumber);
+
+         if (toppep1[0] == NULL || toppep2[0] == NULL)
+            continue;
+
+         double dSlope;
+         double dIntercept;
+//       double dExpect;
+
+         // return dSlope and dIntercept for histogram
+         CalculateEValue(hist_pep1, num_pep1, &dSlope, &dIntercept,
+               pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).iScanNumber);
+
+         if (g_staticParams.options.bVerboseOutput)
+         {
+            mango_print_histogram(hist_pep1);
+            cout << "Top "<< NUMPEPTIDES << " pep1 peptides for this scan are " << endl;
+         }
+
+         double dExpect1 = 999;;
+         if (toppep1[0] != NULL)
+         {
+            if (dSlope > 0)
+               dExpect1 = 999;
             else
-               fprintf(fptxt, "\t-\t0\t999\t0");
-
-            CalculateEValue(hist_pep2, num_pep2, &dSlope, &dIntercept,
-                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2, pvSpectrumList.at(i).iScanNumber);
-
-            if (g_staticParams.options.bVerboseOutput)
-            {
-               mango_print_histogram(hist_pep2);
-               cout << "Top "<< NUMPEPTIDES << " pep2 peptides for this scan are " << endl;
-            }
-
-            double dExpect2 = 999;
-            if (toppep2[0] != NULL)
+               dExpect1 = pow(10.0, dSlope * xcorrPep1[0] + dIntercept);
+         }
+/*
+         for (int li = 0 ; li < NUMPEPTIDES; li++)
+         {
+            if (toppep1[li] != NULL)
             {
                if (dSlope > 0)
-                  dExpect2 = 999;
+                  dExpect = 999;
                else
-                  dExpect2 = pow(10.0, dSlope * xcorrPep2[0] + dIntercept);
-            }
-/*
-            for (int li = 0; li < NUMPEPTIDES; li++)
-            {
-               if (toppep2[li] != NULL)
-               {
-                  if (dSlope > 0)
-                     dExpect = 999;
-                  else
-                     dExpect = pow(10.0, dSlope * xcorrPep2[li] + dIntercept);
+                  dExpect = pow(10.0, dSlope * xcorrPep1[li] + dIntercept);
 
-                  if (li == 0)
-                     dExpect2 = dExpect;
+               if (li == 0)
+                  dExpect1 = dExpect;
 
-                  if (g_staticParams.options.bVerboseOutput)
-                     cout << "pep2_top: " << toppep2[li] << " xcorr " << xcorrPep2[li] << " expect " << dExpect << endl;
-               }
+               if (g_staticParams.options.bVerboseOutput)
+                  cout << "pep1_top: " << toppep1[li] << " xcorr " << xcorrPep1[li] << " expect " << dExpect << endl;
             }
+         }
 */
 
-            if (toppep2[0] != NULL)
-               fprintf(fptxt, "\t%s\t%f\t%0.3E\t%f", toppep2[0], xcorrPep2[0], dExpect2, phdp->phd_calculate_mass_peptide(string(toppep2[0])));
+         fprintf(fptxt, "%d\t%f\t%f", pvSpectrumList.at(i).iScanNumber,
+               pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1,
+               pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2);
+
+         if (toppep1[0] != NULL)
+            fprintf(fptxt, "\t%s\t%f\t%0.3E\t%f", toppep1[0], xcorrPep1[0], dExpect1, phdp->phd_calculate_mass_peptide(string(toppep1[0])));
+         else
+            fprintf(fptxt, "\t-\t0\t999\t0");
+
+         CalculateEValue(hist_pep2, num_pep2, &dSlope, &dIntercept,
+               pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2, pvSpectrumList.at(i).iScanNumber);
+
+         if (g_staticParams.options.bVerboseOutput)
+         {
+            mango_print_histogram(hist_pep2);
+            cout << "Top "<< NUMPEPTIDES << " pep2 peptides for this scan are " << endl;
+         }
+
+         double dExpect2 = 999;
+         if (toppep2[0] != NULL)
+         {
+            if (dSlope > 0)
+               dExpect2 = 999;
             else
-               fprintf(fptxt, "\t-\t0\t999\t0");
-
-            if (g_staticParams.options.bVerboseOutput)
-               cout << "Size of peptide1 list is " << num_pep1 << " and the size of peptide2 list is " << num_pep2 << endl;
-
-            // Compute histogram of combined scores;
-            for (int x=0; x<NUM_BINS; x++)
-               hist_combined[x] = 0;
-    
-            for (vector<double>::iterator x = vdXcorr_pep1.begin(); x != vdXcorr_pep1.end(); ++x)
+               dExpect2 = pow(10.0, dSlope * xcorrPep2[0] + dIntercept);
+         }
+/*
+         for (int li = 0; li < NUMPEPTIDES; li++)
+         {
+            if (toppep2[li] != NULL)
             {
-               for (vector<double>::iterator y = vdXcorr_pep2.begin(); y != vdXcorr_pep2.end(); ++y)
-               {
-                  hist_combined[mango_get_histogram_bin_num(*x + *y)]++;
-               }
+               if (dSlope > 0)
+                  dExpect = 999;
+               else
+                  dExpect = pow(10.0, dSlope * xcorrPep2[li] + dIntercept);
+
+               if (li == 0)
+                  dExpect2 = dExpect;
+
+               if (g_staticParams.options.bVerboseOutput)
+                  cout << "pep2_top: " << toppep2[li] << " xcorr " << xcorrPep2[li] << " expect " << dExpect << endl;
             }
+         }
+*/
 
-            CalculateEValue(hist_combined, num_pep_combined, &dSlope, &dIntercept,
-                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2, pvSpectrumList.at(i).iScanNumber);
+         if (toppep2[0] != NULL)
+            fprintf(fptxt, "\t%s\t%f\t%0.3E\t%f", toppep2[0], xcorrPep2[0], dExpect2, phdp->phd_calculate_mass_peptide(string(toppep2[0])));
+         else
+            fprintf(fptxt, "\t-\t0\t999\t0");
 
-            if (g_staticParams.options.bVerboseOutput)
-               mango_print_histogram(hist_combined);
+         if (g_staticParams.options.bVerboseOutput)
+            cout << "Size of peptide1 list is " << num_pep1 << " and the size of peptide2 list is " << num_pep2 << endl;
 
-            // take all combinations of top pep1 and pep2 and store best
-            for (int x = 0; x< NUMPEPTIDES - 1; x++)
+         // Compute histogram of combined scores;
+         for (int x=0; x<NUM_BINS; x++)
+            hist_combined[x] = 0;
+ 
+         for (vector<double>::iterator x = vdXcorr_pep1.begin(); x != vdXcorr_pep1.end(); ++x)
+         {
+            for (vector<double>::iterator y = vdXcorr_pep2.begin(); y != vdXcorr_pep2.end(); ++y)
             {
-               if (toppep1[x] != NULL)
+               hist_combined[mango_get_histogram_bin_num(*x + *y)]++;
+            }
+         }
+
+         CalculateEValue(hist_combined, num_pep_combined, &dSlope, &dIntercept,
+               pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2, pvSpectrumList.at(i).iScanNumber);
+
+         if (g_staticParams.options.bVerboseOutput)
+            mango_print_histogram(hist_combined);
+
+
+         // take all combinations of top pep1 and pep2 and store best
+         for (int x = 0; x< NUMPEPTIDES - 1; x++)
+         {
+            if (toppep1[x] != NULL)
+            {
+               for (int y = 0; y< NUMPEPTIDES - 1; y++)
                {
-                  for (int y = 0; y< NUMPEPTIDES - 1; y++)
+                  if (toppep2[y] != NULL)
                   {
-                     if (toppep2[y] != NULL)
-                     {
-                        combinedPep = new char[strlen(toppep1[x]) + strlen(toppep2[y]) + 4];
-                        sprintf(combinedPep, "%s + %s", toppep1[x], toppep2[y]);
+                     combinedPep = new char[strlen(toppep1[x]) + strlen(toppep2[y]) + 4];
+                     sprintf(combinedPep, "%s + %s", toppep1[x], toppep2[y]);
 
-                        double dCombinedXcorr = xcorrPep1[x] + xcorrPep2[y];
+                     double dCombinedXcorr = xcorrPep1[x] + xcorrPep2[y];
 
-                        insert_pep_pq(toppepcombined, topprocombined, xcorrCombined, combinedPep, NULL, dCombinedXcorr);
-                     }
+                     insert_pep_pq(toppepcombined, topprocombined, xcorrCombined, combinedPep, NULL, dCombinedXcorr);
                   }
                }
             }
+         }
 
-            double dExpectCombined = 999;
-            if (toppepcombined[0] != NULL)
-            {
-               if (dSlope > 0)
-                  dExpectCombined = 999;
-               else
-                  dExpectCombined = pow(10.0, dSlope * xcorrCombined[0] + dIntercept);
+         double dExpectCombined = 999;
+         if (toppepcombined[0] != NULL)
+         {
+            if (dSlope > 0)
+               dExpectCombined = 999;
+            else
+               dExpectCombined = pow(10.0, dSlope * xcorrCombined[0] + dIntercept);
 
-               fprintf(fptxt, "\t%f\t%0.3E\n",  xcorrCombined[0], dExpectCombined);
-            }
+            fprintf(fptxt, "\t%f\t%0.3E\n",  xcorrCombined[0], dExpectCombined);
+         }
 
 /*
-            for (int li = 0; li < NUMPEPTIDES; li++)
+         for (int li = 0; li < NUMPEPTIDES; li++)
+         {
+            if (toppepcombined[li] != NULL)
             {
-               if (toppepcombined[li] != NULL)
+               if (dSlope > 0)
+                  dExpect = 999;
+               else
+                  dExpect = pow(10.0, dSlope * xcorrCombined[li] + dIntercept);
+
+               if (g_staticParams.options.bVerboseOutput)
+                  cout << "combined: " << toppepcombined[li] << " xcorr " << xcorrCombined[li] << " expect " << dExpect << endl;
+
+               if (li == 0)
                {
-                  if (dSlope > 0)
-                     dExpect = 999;
-                  else
-                     dExpect = pow(10.0, dSlope * xcorrCombined[li] + dIntercept);
-
-                  if (g_staticParams.options.bVerboseOutput)
-                     cout << "combined: " << toppepcombined[li] << " xcorr " << xcorrCombined[li] << " expect " << dExpect << endl;
-
-                  if (li == 0)
-                  {
-                     fprintf(fptxt, "\t%f\t%0.3E\n",  xcorrCombined[li], dExpect);
-                     dExpectCombined = dExpect;
-                  }
+                  fprintf(fptxt, "\t%f\t%0.3E\n",  xcorrCombined[li], dExpect);
+                  dExpectCombined = dExpect;
                }
             }
+         }
 */
 
-            int iCharge = (pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1>pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2
-                  ? pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1
-                  : pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2);
+         int iCharge = (pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1>pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2
+               ? pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1
+               : pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2);
 
-            double dDeltaCn1, dDeltaCn2;
+         double dDeltaCn1, dDeltaCn2;
 
-            dDeltaCn1 = dDeltaCn2 = 0.0;
+         dDeltaCn1 = dDeltaCn2 = 0.0;
 
-            if (xcorrPep1[1] >= 0.0 && xcorrPep1[0] > 0.0)
-               dDeltaCn1 = (xcorrPep1[0] - xcorrPep1[1])/xcorrPep1[0];
-            if (xcorrPep2[1] >= 0.0 && xcorrPep2[0] > 0.0)
-               dDeltaCn2 = (xcorrPep2[0] - xcorrPep2[1])/xcorrPep2[0];
+         if (xcorrPep1[1] >= 0.0 && xcorrPep1[0] > 0.0)
+            dDeltaCn1 = (xcorrPep1[0] - xcorrPep1[1])/xcorrPep1[0];
+         if (xcorrPep2[1] >= 0.0 && xcorrPep2[0] > 0.0)
+            dDeltaCn2 = (xcorrPep2[0] - xcorrPep2[1])/xcorrPep2[0];
 
-            if (g_staticParams.options.iMimicCometPepXML)
-            {
-               WriteSplitSpectrumQuery(fpxml, szBaseName,
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
-                     xcorrPep1[0], xcorrPep2[0],
-                     dDeltaCn1, dDeltaCn2,
-                     dExpect1, dExpect2,
-                     phdp->phd_calculate_mass_peptide(string(toppep1[0])), phdp->phd_calculate_mass_peptide(string(toppep2[0])),
-                     toppep1[0], toppep2[0],
-                     toppro1[0], toppro2[0],
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1,
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2,
-                     iIndex, pvSpectrumList.at(i).iScanNumber,
-                     ii);
-            }
-            else
-            {
-               WriteSpectrumQuery(fpxml, szBaseName,
-                     pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
-                     xcorrPep1[0], xcorrPep2[0],
-                     dDeltaCn1, dDeltaCn2,
-                     dExpect1, dExpect2,
-                     phdp->phd_calculate_mass_peptide(string(toppep1[0])), phdp->phd_calculate_mass_peptide(string(toppep2[0])),
-                     xcorrCombined[0], dExpectCombined,
-                     toppep1[0], toppep2[0],
-                     toppro1[0], toppro2[0],
-                     iCharge,                                     // report largest charge of the two released peptides
-                     iIndex, pvSpectrumList.at(i).iScanNumber);
-            }
-         }
-
-         for (int y=0; y<(int)g_pvQuery.size(); y++)
+         if (g_staticParams.options.iMimicCometPepXML)
          {
-            // need to free processed spectrum data here
-            for (int x=0;x<g_pvQuery.at(y)->iFastXcorrData;x++)
-            {
-               if (g_pvQuery.at(y)->ppfSparseFastXcorrData[x] != NULL)
-                  delete[] g_pvQuery.at(y)->ppfSparseFastXcorrData[x];
-            }
+            WriteSplitSpectrumQuery(fpxml, szBaseName,
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
+                  xcorrPep1[0], xcorrPep2[0],
+                  dDeltaCn1, dDeltaCn2,
+                  dExpect1, dExpect2,
+                  phdp->phd_calculate_mass_peptide(string(toppep1[0])), phdp->phd_calculate_mass_peptide(string(toppep2[0])),
+                  toppep1[0], toppep2[0],
+                  toppro1[0], toppro2[0],
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge1,
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).iCharge2,
+                  iIndex, pvSpectrumList.at(i).iScanNumber,
+                  ii);
          }
-
-         g_pvQuery.clear();
-
-         if (!g_staticParams.options.bVerboseOutput)
+         else
          {
-            printf("%5.1f%%", (float)(100.0*i/pvSpectrumList.size()));
-            fflush(stdout);
-            printf("\b\b\b\b\b\b");
+            WriteSpectrumQuery(fpxml, szBaseName,
+                  pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass1, pvSpectrumList.at(i).pvdPrecursors.at(ii).dNeutralMass2,
+                  xcorrPep1[0], xcorrPep2[0],
+                  dDeltaCn1, dDeltaCn2,
+                  dExpect1, dExpect2,
+                  phdp->phd_calculate_mass_peptide(string(toppep1[0])), phdp->phd_calculate_mass_peptide(string(toppep2[0])),
+                  xcorrCombined[0], dExpectCombined,
+                  toppep1[0], toppep2[0],
+                  toppro1[0], toppro2[0],
+                  iCharge,                                     // report largest charge of the two released peptides
+                  iIndex, pvSpectrumList.at(i).iScanNumber);
          }
-      } //scan range restriction
+      }
+
+      for (int y=0; y<(int)g_pvQuery.size(); y++)
+      {
+         // need to free processed spectrum data here
+         for (int x=0;x<g_pvQuery.at(y)->iFastXcorrData;x++)
+         {
+            if (g_pvQuery.at(y)->ppfSparseFastXcorrData[x] != NULL)
+               delete[] g_pvQuery.at(y)->ppfSparseFastXcorrData[x];
+         }
+      }
+
+      g_pvQuery.clear();
+
+      if (!g_staticParams.options.bVerboseOutput)
+      {
+         printf("%5.1f%%", (float)(100.0*i/pvSpectrumList.size()));
+         fflush(stdout);
+         printf("\b\b\b\b\b\b");
+      }
+// } //scan range restriction
    }
 
    mango_preprocess::DeallocateMemory(1);
@@ -1035,7 +998,7 @@ void mango_Search::WritePepXMLHeader(FILE *fpxml,
 
    if (bMimicComet)
    {
-      fprintf(fpxml, "  <search_summary base_name=\"%s/%s\" search_engine=\"Mango\" search_engine_version=\"1.0.0\" precursor_mass_type=\"monoisotopic\" fragment_mass_type=\"monoisotopic\" search_id=\"1\">\n", szCWD, szBaseName);
+      fprintf(fpxml, "  <search_summary base_name=\"%s/%s\" search_engine=\"Comet\" search_engine_version=\"Mango 1.0.0\" precursor_mass_type=\"monoisotopic\" fragment_mass_type=\"monoisotopic\" search_id=\"1\">\n", szCWD, szBaseName);
    }
    else
    {
