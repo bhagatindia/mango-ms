@@ -33,4 +33,4 @@ public:
                           double *dOH2);
 };
 
-#endif // _XLINKSMASSSPECUTILS_H_
+#endif // _MANGOMASSSPECUTILS_H_

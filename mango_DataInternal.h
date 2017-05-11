@@ -697,4 +697,4 @@ struct IonSeriesStruct         // defines which fragment ion series are consider
    int bPreviousMatch[8];
 };
 
-#endif // _XLINKSDATAINTERNAL_H_
+#endif // _MANGODATAINTERNAL_H_
